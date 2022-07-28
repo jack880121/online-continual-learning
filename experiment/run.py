@@ -31,14 +31,15 @@ def multiple_run(params, store=False, save_path=None):
             save_path = params.model_name + '_' + params.data_name + '.pkl'
 
     accuracy_list = []
+    model = setup_architecture(params)
+    model = maybe_cuda(model, params.cuda)
+    opt = setup_opt(params.optimizer, model, params.learning_rate, params.weight_decay)
+    agent = agents[params.agent](model, opt, params)
     for run in range(params.num_runs):
         tmp_acc = []
         run_start = time.time()
-        data_continuum.new_run()
-        model = setup_architecture(params)
-        model = maybe_cuda(model, params.cuda)
-        opt = setup_opt(params.optimizer, model, params.learning_rate, params.weight_decay)
-        agent = agents[params.agent](model, opt, params)
+        data_continuum.new_run(run)
+        
 
         # prepare val data loader
         test_loaders = setup_test_loader(data_continuum.test_data(), params)

@@ -13,12 +13,12 @@ class DatasetBase(ABC):
         self.test_set = []
         self.val_set = []
         self._is_properly_setup()
-        self.download_load()
+        #self.download_load()
 
 
-    @abstractmethod
-    def download_load(self):
-        pass
+    #@abstractmethod
+    #def download_load(self):
+        #pass
 
     @abstractmethod
     def setup(self, **kwargs):

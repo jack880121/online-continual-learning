@@ -16,7 +16,7 @@ class d20220331(DatasetBase):
             num_tasks = params.num_tasks
         super(d20220331, self).__init__(dataset, scenario, num_tasks, params.num_runs, params)
 
-    def my_load(self,root,n1,n2):
+    def my_load(self,root,n1,n2,run):
         imgsize = 200
         d0 = os.listdir(root+"/D000")
         d1 = os.listdir(root+"/D001")
@@ -24,7 +24,7 @@ class d20220331(DatasetBase):
         data = np.zeros([n1+n2,imgsize,imgsize,3])
         c1 = 0
         for i in range (len(d0)):
-            img = cv2.imread(root+"/D000/"+d0[i])[np.newaxis, :] 
+            img = cv2.imread(root+"/D000/"+d0[i+run*n1])[np.newaxis, :] 
             if img.shape[1]==imgsize and img.shape[2]==imgsize:
                 c1 = c1+1
                 data[c1-1] = img
@@ -32,7 +32,7 @@ class d20220331(DatasetBase):
                     break
         c2 = 0
         for i in range (len(d1)):
-            img = cv2.imread(root+"/D001/"+d1[i])[np.newaxis, :] 
+            img = cv2.imread(root+"/D001/"+d1[i+run*n2])[np.newaxis, :] 
             if img.shape[1]==imgsize and img.shape[2]==imgsize:
                 c2 = c2+1
                 data[c1+c2-1] = img
@@ -46,13 +46,15 @@ class d20220331(DatasetBase):
 
         return data,label
         
-    def download_load(self):
+    def download_load(self,run):
         root = "/tf/online-continual-learning/datasets/20220331"
         
-        self.train_data,self.train_label = self.my_load(root+'/train',2500,2500)
+        self.train_data,self.train_label = self.my_load(root+'/train',1500,1500,run)
         print('train ok')
-        self.test_data,self.test_label = self.my_load(root+'/test',500,500)
+        self.test_data,self.test_label = self.my_load(root+'/test',500,500,0)
         print('test ok')
+        #self.test_data = self.train_data[:500]
+        #self.test_label = self.train_label[:500]
 
     def setup(self):
         if self.scenario == 'ni':
@@ -80,7 +82,11 @@ class d20220331(DatasetBase):
             x_train, y_train = load_task_with_labels(self.train_data, self.train_label, labels)
         return x_train, y_train, labels
 
-    def new_run(self, **kwargs):
+#    def new_run(self, **kwargs):
+#        self.setup()
+#        return self.test_set
+    def new_run(self,run):
+        self.download_load(run)
         self.setup()
         return self.test_set
 

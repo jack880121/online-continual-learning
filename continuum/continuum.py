@@ -31,9 +31,10 @@ class continuum(object):
     def reset_run(self):
         self.cur_task = 0
 
-    def new_run(self):
+    def new_run(self,run):
         self.cur_task = 0
         self.cur_run += 1
-        self.data_object.new_run(cur_run=self.cur_run)
+        #self.data_object.new_run(cur_run=self.cur_run)
+        self.data_object.new_run(run)
 
 

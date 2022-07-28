@@ -26,7 +26,7 @@ if __name__ == "__main__":
     # Commandline arguments
     parser = argparse.ArgumentParser(description="Online Continual Learning PyTorch")
     ########################General#########################
-    parser.add_argument('--num_runs', dest='num_runs', default=1, type=int,
+    parser.add_argument('--num_runs', dest='num_runs', default=10, type=int,
                         help='Number of runs (default: %(default)s)')
     parser.add_argument('--seed', dest='seed', default=0, type=int,
                         help='Random seed')
@@ -74,7 +74,7 @@ if __name__ == "__main__":
                         help='weight_decay')
 
     ########################Data#########################
-    parser.add_argument('--num_tasks', dest='num_tasks', default=10,
+    parser.add_argument('--num_tasks', dest='num_tasks', default=1,
                         type=int,
                         help='Number of tasks (default: %(default)s), OpenLORIS num_tasks is predefined')
     parser.add_argument('--fix_order', dest='fix_order', default=False,
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     parser.add_argument('--cl_type', dest='cl_type', default="nc", choices=['nc', 'ni'],
                         help='Continual learning type: new class "nc" or new instance "ni". (default: %(default)s)')
     parser.add_argument('--ns_factor', dest='ns_factor', nargs='+',
-                        default=(0.0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8, 3.2, 3.6), type=float,
+                        default=[0.0], type=float,
                         help='Change factor for non-stationary data(default: %(default)s)')
     parser.add_argument('--ns_type', dest='ns_type', default='noise', type=str, choices=['noise', 'occlusion', 'blur'],
                         help='Type of non-stationary (default: %(default)s)')
