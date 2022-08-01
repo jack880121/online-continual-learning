@@ -88,8 +88,42 @@ def multiple_run(params, store=False, save_path=None):
         print('----------- Total {} run: {}s -----------'.format(params.num_runs, end - start))
         print("avg_end_acc {}".format(np.mean(accuracy_list)))
         
+def multiple_run_test(params, store=False, save_path=None):
+    # Set up data stream
+    start = time.time()
+    print('Setting up data stream')
+    data_continuum = continuum(params.data, params.cl_type, params)
+    data_end = time.time()
+    print('data setup time: {}'.format(data_end - start))
 
+    accuracy_list = []
+    model = setup_architecture(params)
+    #load model
+    model = maybe_cuda(model, params.cuda)
+    opt = setup_opt(params.optimizer, model, params.learning_rate, params.weight_decay)
+    agent = agents[params.agent](model, opt, params)
+    for run in range(params.num_runs):
+        tmp_acc = []
+        run_start = time.time()
+        data_continuum.new_run(run)
+        
 
+        # prepare val data loader
+        test_loaders = setup_test_loader(data_continuum.test_data(), params)
+        if params.online:
+            acc_array = agent.evaluate(test_loaders)
+            run_end = time.time()
+            print(
+                "-----------run {}-----------avg_end_acc {}-----------train time {}".format(run, acc_array,
+                                                                               run_end - run_start))
+
+    accuracy_array = np.array(acc_array)
+    end = time.time()
+    if params.online:
+        avg_end_acc, avg_end_fgt, avg_acc, avg_bwtp, avg_fwt = compute_performance(accuracy_array)
+        print('----------- Total {} run: {}s -----------'.format(params.num_runs, end - start))
+        print('----------- Avg_End_Acc {} Avg_End_Fgt {} Avg_Acc {} Avg_Bwtp {} Avg_Fwt {}-----------'
+              .format(avg_end_acc, avg_end_fgt, avg_acc, avg_bwtp, avg_fwt))
 
 
 def multiple_run_tune(defaul_params, tune_params, save_path):

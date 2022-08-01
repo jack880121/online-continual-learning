@@ -55,6 +55,17 @@ class d20220331(DatasetBase):
         print('test ok')
         #self.test_data = self.train_data[:500]
         #self.test_label = self.train_label[:500]
+'''    
+    def download_load(self,run):
+        root = "/tf/online-continual-learning/datasets/20220331"
+        
+        if params.mode == 'train':
+            self.train_data,self.train_label = self.my_load(root+'/train',1500,1500,run)
+            print('train ok')
+        else:
+            self.test_data,self.test_label = self.my_load(root+'/test',500,500,0)
+            print('test ok')
+'''
 
     def setup(self):
         if self.scenario == 'ni':
@@ -64,6 +75,21 @@ class d20220331(DatasetBase):
                                                                                         self.task_nums, 200,
                                                                                         self.params.ns_type,                                                                                               self.params.ns_factor,
                                                                                         plot=self.params.plot_sample)
+            '''
+        if self.scenario == 'ni':
+            if params.mode == 'train':
+                self.train_set= construct_ns_multiple_wrapper_train(self.train_data,
+                                                                                        self.train_label,
+                                                                                        self.task_nums, 200,
+                                                                                        self.params.ns_type,                                                                                               self.params.ns_factor,
+                                                                                    plot=self.params.plot_sample)
+            else:
+                self.test_set = construct_ns_multiple_wrapper_test(self.test_data,                                                                                                                             self.test_label, 
+                                                                                        self.task_nums, 200,
+                                                                                        self.params.ns_type,                                                                                               self.params.ns_factor,
+                                                                                    plot=self.params.plot_sample)
+            '''
+            '''
         elif self.scenario == 'nc':
             self.task_labels = create_task_composition(class_nums=100, num_tasks=self.task_nums, fixed_order=self.params.fix_order)
             self.test_set = []
@@ -72,6 +98,7 @@ class d20220331(DatasetBase):
                 self.test_set.append((x_test, y_test))
         else:
             raise Exception('wrong scenario')
+            '''
 
     def new_task(self, cur_task, **kwargs):
         if self.scenario == 'ni':
@@ -88,7 +115,7 @@ class d20220331(DatasetBase):
     def new_run(self,run):
         self.download_load(run)
         self.setup()
-        return self.test_set
+        #return self.test_set
 
     def test_plot(self):
         test_ns(self.train_data[:10], self.train_label[:10], self.params.ns_type,

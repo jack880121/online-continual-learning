@@ -19,7 +19,7 @@ def main(args):
     args.trick = {'labels_trick': args.labels_trick, 'separated_softmax': args.separated_softmax,
                   'kd_trick': args.kd_trick, 'kd_trick_star': args.kd_trick_star, 'review_trick': args.review_trick,
                   'ncm_trick': args.ncm_trick}
-    multiple_run(args, store=args.store, save_path=args.save_path)
+    multiple_run_test(args, store=args.store, save_path=args.save_path)
 
 
 if __name__ == "__main__":
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     ########################General#########################
     parser.add_argument('--num_runs', dest='num_runs', default=1, type=int,
                         help='Number of runs (default: %(default)s)')
-    parser.add_argument('--mode', dest='mode', default='train', type=str,
+    parser.add_argument('--mode', dest='mode', default='test', type=str,
                         help='train or test')
     parser.add_argument('--seed', dest='seed', default=0, type=int,
                         help='Random seed')
