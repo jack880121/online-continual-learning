@@ -26,7 +26,7 @@ if __name__ == "__main__":
     # Commandline arguments
     parser = argparse.ArgumentParser(description="Online Continual Learning PyTorch")
     ########################General#########################
-    parser.add_argument('--num_runs', dest='num_runs', default=10, type=int,
+    parser.add_argument('--num_runs', dest='num_runs', default=1, type=int,
                         help='Number of runs (default: %(default)s)')
     parser.add_argument('--seed', dest='seed', default=0, type=int,
                         help='Random seed')

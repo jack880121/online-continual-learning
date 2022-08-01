@@ -67,3 +67,8 @@ class SupContrastReplay(ContinualLearner):
                                 .format(i, losses.avg(), acc_batch.avg())
                         )
         self.after_train()
+        torch.save({
+                'old_labels': self.old_labels,
+                'buffer.current_index': self.buffer.current_index, 
+                'model_state_dict': self.model.state_dict(),
+                }, 'model_state_dict.pt')

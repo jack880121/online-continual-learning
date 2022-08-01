@@ -12,6 +12,7 @@ from utils.io import load_yaml, save_dataframe_csv, check_ram_usage
 import pandas as pd
 import os
 import pickle
+import torch
 
 
 def multiple_run(params, store=False, save_path=None):
@@ -86,6 +87,7 @@ def multiple_run(params, store=False, save_path=None):
     else:
         print('----------- Total {} run: {}s -----------'.format(params.num_runs, end - start))
         print("avg_end_acc {}".format(np.mean(accuracy_list)))
+        
 
 
 
