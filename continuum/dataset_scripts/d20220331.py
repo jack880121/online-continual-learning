@@ -9,12 +9,13 @@ from continuum.non_stationary import construct_ns_multiple_wrapper, test_ns
 
 class d20220331(DatasetBase):
     def __init__(self, scenario, params):
+        self.params = params
         dataset = 'd20220331'
         if scenario == 'ni':
-            num_tasks = len(params.ns_factor)
+            num_tasks = len(self.params.ns_factor)
         else:
-            num_tasks = params.num_tasks
-        super(d20220331, self).__init__(dataset, scenario, num_tasks, params.num_runs, params)
+            num_tasks = self.params.num_tasks
+        super(d20220331, self).__init__(dataset, scenario, num_tasks, self.params.num_runs, self.params)
 
     def my_load(self,root,n1,n2,run):
         imgsize = 200
@@ -45,7 +46,8 @@ class d20220331(DatasetBase):
         label[c1:] = 1
 
         return data,label
-        
+    
+    '''        
     def download_load(self,run):
         root = "/tf/online-continual-learning/datasets/20220331"
         
@@ -53,43 +55,42 @@ class d20220331(DatasetBase):
         print('train ok')
         self.test_data,self.test_label = self.my_load(root+'/test',500,500,0)
         print('test ok')
-        #self.test_data = self.train_data[:500]
-        #self.test_label = self.train_label[:500]
-'''    
+    '''
+
     def download_load(self,run):
         root = "/tf/online-continual-learning/datasets/20220331"
         
-        if params.mode == 'train':
+        if self.params.mode == 'train':
             self.train_data,self.train_label = self.my_load(root+'/train',1500,1500,run)
             print('train ok')
         else:
             self.test_data,self.test_label = self.my_load(root+'/test',500,500,0)
             print('test ok')
-'''
-
+        
     def setup(self):
+        '''
         if self.scenario == 'ni':
             self.train_set, self.test_set = construct_ns_multiple_wrapper(self.train_data,
                                                                                         self.train_label,
                                                                                         self.test_data,                                                                                                   self.test_label, 
                                                                                         self.task_nums, 200,
                                                                                         self.params.ns_type,                                                                                               self.params.ns_factor,
-                                                                                        plot=self.params.plot_sample)
-            '''
+                                                                                     plot=self.params.plot_sample)
+        '''
         if self.scenario == 'ni':
-            if params.mode == 'train':
-                self.train_set= construct_ns_multiple_wrapper_train(self.train_data,
+            if self.params.mode == 'train':
+                self.train_set= construct_ns_multiple_wrapper(self.train_data,
                                                                                         self.train_label,
                                                                                         self.task_nums, 200,
                                                                                         self.params.ns_type,                                                                                               self.params.ns_factor,
                                                                                     plot=self.params.plot_sample)
             else:
-                self.test_set = construct_ns_multiple_wrapper_test(self.test_data,                                                                                                                             self.test_label, 
+                self.test_set = construct_ns_multiple_wrapper(self.test_data,                                                                                                                             self.test_label, 
                                                                                         self.task_nums, 200,
                                                                                         self.params.ns_type,                                                                                               self.params.ns_factor,
                                                                                     plot=self.params.plot_sample)
-            '''
-            '''
+            
+        '''
         elif self.scenario == 'nc':
             self.task_labels = create_task_composition(class_nums=100, num_tasks=self.task_nums, fixed_order=self.params.fix_order)
             self.test_set = []
@@ -98,7 +99,7 @@ class d20220331(DatasetBase):
                 self.test_set.append((x_test, y_test))
         else:
             raise Exception('wrong scenario')
-            '''
+        '''
 
     def new_task(self, cur_task, **kwargs):
         if self.scenario == 'ni':
@@ -115,6 +116,7 @@ class d20220331(DatasetBase):
     def new_run(self,run):
         self.download_load(run)
         self.setup()
+        print('data prepared')
         #return self.test_set
 
     def test_plot(self):

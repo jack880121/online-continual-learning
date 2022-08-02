@@ -23,8 +23,8 @@ class Buffer(torch.nn.Module):
         buffer_label = maybe_cuda(torch.LongTensor(buffer_size).fill_(0))
 
         # registering as buffer allows us to save the object using `torch.save`
-        self.register_buffer('buffer_img', buffer_img)
-        self.register_buffer('buffer_label', buffer_label)
+        self.register_buffer('buffer_img', buffer_img, persistent=True)
+        self.register_buffer('buffer_label', buffer_label, persistent=True)
 
         # define update and retrieve method
         self.update_method = name_match.update_methods[params.update](params)

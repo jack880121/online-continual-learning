@@ -178,7 +178,7 @@ def construct_ns_single(train_x_split, train_y_split, test_x_split, test_y_split
                 i += 1
     return train_list, test_list
 
-
+'''
 def construct_ns_multiple(train_x_split, train_y_split, test_x_split,
                           test_y_split, ns_type, change_factors, plot):
     train_list = []
@@ -201,6 +201,24 @@ def construct_ns_multiple(train_x_split, train_y_split, test_x_split,
         tmp_test = ns_generator(test_x_split[i], test_y_split[i], color=True)
         test_list.append(tmp_test.next_task(factor))
     return train_list, test_list
+'''
+def construct_ns_multiple(x_split, y_split, ns_type, change_factors, plot):
+    datalist = []
+    ns_len = len(change_factors)
+    for i in range(ns_len):
+        factor = change_factors[i]
+        if factor == 0:
+            ns_generator = Original
+        else:
+            ns_generator = ns_match[ns_type]
+        print(i, factor)
+        # train
+        tmp = ns_generator(x_split[i], y_split[i], color=True)
+        datalist.append(tmp.next_task(factor))
+        if plot:
+            tmp.show_sample()
+
+    return datalist
 
 '''
 def construct_ns_multiple_wrapper(train_data, train_label, test_data, test_label, task_nums, img_size,
@@ -216,6 +234,8 @@ def construct_ns_multiple_wrapper(train_data, train_label, test_data, test_label
                                                          plot=plot)
     return train_set, val_set, test_set
 '''
+
+'''
 def construct_ns_multiple_wrapper(train_data, train_label, test_data, test_label,                                               task_nums, img_size, ns_type, ns_factor, plot):
     train_data_rdm_split, train_label_rdm_split, test_data_rdm_split, test_label_rdm_split = train_val_test_split_ni(train_data, train_label, test_data, test_label, task_nums, img_size)
     train_set, test_set = construct_ns_multiple(train_data_rdm_split, train_label_rdm_split,
@@ -224,3 +244,12 @@ def construct_ns_multiple_wrapper(train_data, train_label, test_data, test_label
                                                          ns_factor,
                                                          plot=plot)
     return train_set, test_set
+'''
+
+def construct_ns_multiple_wrapper(data,label,task_nums, img_size, ns_type, ns_factor, plot):
+    data_rdm_split, label_rdm_split = train_val_test_split_ni(data, label, task_nums, img_size)
+    dataset = construct_ns_multiple(data_rdm_split, label_rdm_split,
+                                                         ns_type,
+                                                         ns_factor,
+                                                         plot=plot)
+    return dataset

@@ -86,6 +86,7 @@ def train_val_test_split_ni(train_data, train_label, test_data, test_label, task
     test_label_rdm_split = test_label_rdm.reshape(task_nums, -1)
     return train_data_rdm_split, train_label_rdm_split, val_data_rdm_split, val_label_rdm_split, test_data_rdm_split, test_label_rdm_split
 '''
+'''
 def train_val_test_split_ni(train_data, train_label, test_data, test_label, task_nums, img_size):
     train_data_rdm, train_label_rdm = shuffle_data(train_data, train_label)
     #val_size = int(len(train_data_rdm) * val_size)
@@ -98,3 +99,10 @@ def train_val_test_split_ni(train_data, train_label, test_data, test_label, task
     test_data_rdm_split = test_data_rdm.reshape(task_nums, -1, img_size, img_size, 3)
     test_label_rdm_split = test_label_rdm.reshape(task_nums, -1)
     return train_data_rdm_split, train_label_rdm_split, test_data_rdm_split, test_label_rdm_split
+'''
+def train_val_test_split_ni(data, label, task_nums, img_size):
+    data_rdm, label_rdm = shuffle_data(data, label)
+    data_rdm_split = data_rdm.reshape(task_nums, -1, img_size, img_size, 3)
+    label_rdm_split = label_rdm.reshape(task_nums, -1)
+    
+    return data_rdm_split, label_rdm_split
