@@ -9,7 +9,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import copy
 from utils.loss import SupConLoss
 import pickle
-
+from sklearn.metrics import recall_score,accuracy_score,precision_score
 
 class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
     '''
@@ -115,7 +115,124 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
     def forward(self, x):
         return self.model.forward(x)
 
+#     def evaluate(self, test_loaders):
+#         self.model.eval()
+#         acc_array = np.zeros(len(test_loaders))
+#         if self.params.trick['ncm_trick'] or self.params.agent in ['ICARL', 'SCR', 'SCP']:
+#             exemplar_means = {}
+#             cls_exemplar = {cls: [] for cls in self.old_labels}
+#             buffer_filled = self.buffer.current_index
+#             for x, y in zip(self.buffer.buffer_img[:buffer_filled], self.buffer.buffer_label[:buffer_filled]):
+#                 cls_exemplar[y.item()].append(x)
+#             for cls, exemplar in cls_exemplar.items():
+#                 features = []
+#                 # Extract feature for each exemplar in p_y
+#                 for ex in exemplar:
+#                     feature = self.model.features(ex.unsqueeze(0)).detach().clone()
+#                     feature = feature.squeeze()
+#                     feature.data = feature.data / feature.data.norm()  # Normalize
+#                     features.append(feature)
+#                 if len(features) == 0:
+#                     mu_y = maybe_cuda(torch.normal(0, 1, size=tuple(self.model.features(x.unsqueeze(0)).detach().size())), self.cuda)
+#                     mu_y = mu_y.squeeze()
+#                 else:
+#                     features = torch.stack(features)
+#                     mu_y = features.mean(0).squeeze()
+#                 mu_y.data = mu_y.data / mu_y.data.norm()  # Normalize
+#                 exemplar_means[cls] = mu_y
+#         with torch.no_grad():
+#             if self.params.error_analysis:
+#                 error = 0
+#                 no = 0
+#                 nn = 0
+#                 oo = 0
+#                 on = 0
+#                 new_class_score = AverageMeter()
+#                 old_class_score = AverageMeter()
+#                 correct_lb = []
+#                 predict_lb = []
+#             for task, test_loader in enumerate(test_loaders):
+#                 acc = AverageMeter()
+#                 for i, (batch_x, batch_y) in enumerate(test_loader):
+#                     batch_x = maybe_cuda(batch_x, self.cuda)
+#                     batch_y = maybe_cuda(batch_y, self.cuda)
+#                     if self.params.trick['ncm_trick'] or self.params.agent in ['ICARL', 'SCR', 'SCP']:
+#                         feature = self.model.features(batch_x)  # (batch_size, feature_size)
+#                         for j in range(feature.size(0)):  # Normalize
+#                             feature.data[j] = feature.data[j] / feature.data[j].norm()
+#                         feature = feature.unsqueeze(2)  # (batch_size, feature_size, 1)
+#                         means = torch.stack([exemplar_means[cls] for cls in self.old_labels])  # (n_classes, feature_size)
+
+#                         #old ncm
+#                         means = torch.stack([means] * batch_x.size(0))  # (batch_size, n_classes, feature_size)
+#                         means = means.transpose(1, 2)
+#                         feature = feature.expand_as(means)  # (batch_size, feature_size, n_classes)
+#                         dists = (feature - means).pow(2).sum(1).squeeze()  # (batch_size, n_classes)
+#                         _, pred_label = dists.min(1)
+#                         # may be faster
+#                         # feature = feature.squeeze(2).T
+#                         # _, preds = torch.matmul(means, feature).max(0)
+#                         correct_cnt = (np.array(self.old_labels)[
+#                                            pred_label.tolist()] == batch_y.cpu().numpy()).sum().item() / batch_y.size(0)
+#                     else:
+#                         logits = self.model.forward(batch_x)
+#                         _, pred_label = torch.max(logits, 1)
+#                         correct_cnt = (pred_label == batch_y).sum().item()/batch_y.size(0)
+
+#                     if self.params.error_analysis:
+#                         correct_lb += [task] * len(batch_y)
+#                         for i in pred_label:
+#                             predict_lb.append(self.class_task_map[i.item()])
+#                         if task < self.task_seen-1:
+#                             # old test
+#                             total = (pred_label != batch_y).sum().item()
+#                             wrong = pred_label[pred_label != batch_y]
+#                             error += total
+#                             on_tmp = sum([(wrong == i).sum().item() for i in self.new_labels_zombie])
+#                             oo += total - on_tmp
+#                             on += on_tmp
+#                             old_class_score.update(logits[:, list(set(self.old_labels) - set(self.new_labels_zombie))].mean().item(), batch_y.size(0))
+#                         elif task == self.task_seen -1:
+#                             # new test
+#                             total = (pred_label != batch_y).sum().item()
+#                             error += total
+#                             wrong = pred_label[pred_label != batch_y]
+#                             no_tmp = sum([(wrong == i).sum().item() for i in list(set(self.old_labels) - set(self.new_labels_zombie))])
+#                             no += no_tmp
+#                             nn += total - no_tmp
+#                             new_class_score.update(logits[:, self.new_labels_zombie].mean().item(), batch_y.size(0))
+#                         else:
+#                             pass
+#                     acc.update(correct_cnt, batch_y.size(0))
+#                 acc_array[task] = acc.avg()
+#         print(acc_array)
+#         if self.params.error_analysis:
+#             self.error_list.append((no, nn, oo, on))
+#             self.new_class_score.append(new_class_score.avg())
+#             self.old_class_score.append(old_class_score.avg())
+#             print("no ratio: {}\non ratio: {}".format(no/(no+nn+0.1), on/(oo+on+0.1)))
+#             print(self.error_list)
+#             print(self.new_class_score)
+#             print(self.old_class_score)
+#             self.fc_norm_new.append(self.model.linear.weight[self.new_labels_zombie].mean().item())
+#             self.fc_norm_old.append(self.model.linear.weight[list(set(self.old_labels) - set(self.new_labels_zombie))].mean().item())
+#             self.bias_norm_new.append(self.model.linear.bias[self.new_labels_zombie].mean().item())
+#             self.bias_norm_old.append(self.model.linear.bias[list(set(self.old_labels) - set(self.new_labels_zombie))].mean().item())
+#             print(self.fc_norm_old)
+#             print(self.fc_norm_new)
+#             print(self.bias_norm_old)
+#             print(self.bias_norm_new)
+#             with open('confusion', 'wb') as fp:
+#                 pickle.dump([correct_lb, predict_lb], fp)
+#         return acc_array
+    
     def evaluate(self, test_loaders):
+        checkpoint = torch.load('/tf/online-continual-learning/model_state_dict.pt')
+        self.old_labels = checkpoint['old_labels']
+        self.buffer.current_index = checkpoint['buffer.current_index']
+        self.buffer.buffer_img = checkpoint['buffer.buffer_img']
+        self.buffer.buffer_label = checkpoint['buffer.buffer_label']
+        
         self.model.eval()
         acc_array = np.zeros(len(test_loaders))
         if self.params.trick['ncm_trick'] or self.params.agent in ['ICARL', 'SCR', 'SCP']:
@@ -153,6 +270,9 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                 predict_lb = []
             for task, test_loader in enumerate(test_loaders):
                 acc = AverageMeter()
+                sk_recall = AverageMeter()
+                sk_accuracy = AverageMeter()
+                sk_precision = AverageMeter()
                 for i, (batch_x, batch_y) in enumerate(test_loader):
                     batch_x = maybe_cuda(batch_x, self.cuda)
                     batch_y = maybe_cuda(batch_y, self.cuda)
@@ -174,6 +294,9 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                         # _, preds = torch.matmul(means, feature).max(0)
                         correct_cnt = (np.array(self.old_labels)[
                                            pred_label.tolist()] == batch_y.cpu().numpy()).sum().item() / batch_y.size(0)
+                        recall = recall_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
+                        accuracy = accuracy_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
+                        precision = precision_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
                     else:
                         logits = self.model.forward(batch_x)
                         _, pred_label = torch.max(logits, 1)
@@ -204,8 +327,17 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                         else:
                             pass
                     acc.update(correct_cnt, batch_y.size(0))
+                    sk_accuracy.update(accuracy, batch_y.size(0))
+                    sk_precision.update(precision, batch_y.size(0))
+                    sk_recall.update(recall, batch_y.size(0))
+                accuracy = sk_accuracy.avg()
+                precision = sk_precision.avg()
+                recall = sk_recall.avg()
                 acc_array[task] = acc.avg()
-        print(acc_array)
+#         print('acc:',acc_array)
+#         print('recall:',recall)
+#         print('accuracy:',accuracy)
+#         print('precision:',precision)
         if self.params.error_analysis:
             self.error_list.append((no, nn, oo, on))
             self.new_class_score.append(new_class_score.avg())
@@ -224,4 +356,4 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             print(self.bias_norm_new)
             with open('confusion', 'wb') as fp:
                 pickle.dump([correct_lb, predict_lb], fp)
-        return acc_array
+        return accuracy,recall,precision

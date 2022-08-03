@@ -2,7 +2,7 @@ import argparse
 import random
 import numpy as np
 import torch
-from experiment.run import multiple_run
+from experiment.run import multiple_run_test
 from utils.utils import boolean_string
 
 

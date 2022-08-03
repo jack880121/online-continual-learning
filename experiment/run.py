@@ -178,21 +178,22 @@ def multiple_run_test(params, store=False, save_path=None):
         # prepare val data loader
         test_loaders = setup_test_loader(data_continuum.test_data(), params)
         if params.online:
-            acc_array = agent.evaluate(test_loaders)
+            accuracy,recall,precision = agent.evaluate(test_loaders)
             run_end = time.time()
-            print(
-                "-----------run {}-----------avg_end_acc {}-----------train time {}".format(run, acc_array,
-                                                                               run_end - run_start))
+            print("----run {}----accuracy {}----recall {}----precision {}-----test time {}".format(run, accuracy,recall,precision,run_end - run_start))
+#             print(
+#                 "-----------run {}-----------avg_end_acc {}-----------train time {}".format(run, acc_array,
+#                                                                                run_end - run_start))
 
-    accuracy_array = np.array(acc_array)
-    end = time.time()
-    '''
-    if params.online:
-        avg_end_acc, avg_end_fgt, avg_acc, avg_bwtp, avg_fwt = compute_performance(accuracy_array)
-        print('----------- Total {} run: {}s -----------'.format(params.num_runs, end - start))
-        print('----------- Avg_End_Acc {} Avg_End_Fgt {} Avg_Acc {} Avg_Bwtp {} Avg_Fwt {}-----------'
-              .format(avg_end_acc, avg_end_fgt, avg_acc, avg_bwtp, avg_fwt))
-    '''
+#     accuracy_array = np.array(acc_array)
+#     end = time.time()
+    
+#     if params.online:
+#         avg_end_acc, avg_end_fgt, avg_acc, avg_bwtp, avg_fwt = compute_performance(accuracy_array)
+#         print('----------- Total {} run: {}s -----------'.format(params.num_runs, end - start))
+#         print('----------- Avg_End_Acc {} Avg_End_Fgt {} Avg_Acc {} Avg_Bwtp {} Avg_Fwt {}-----------'
+#               .format(avg_end_acc, avg_end_fgt, avg_acc, avg_bwtp, avg_fwt))
+    
 
 
 def multiple_run_tune(defaul_params, tune_params, save_path):

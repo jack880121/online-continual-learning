@@ -64,8 +64,8 @@ class d20220331(DatasetBase):
             self.train_data,self.train_label = self.my_load(root+'/train',1500,1500,run)
             print('train ok')
         else:
-            self.test_data,self.test_label = self.my_load(root+'/test',500,500,0)
-            print('test ok')
+            self.test_data,self.test_label = self.my_load(root+'/test',300,300,0)
+            print('test ok',self.test_data.shape)
         
     def setup(self):
         '''
