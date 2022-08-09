@@ -211,7 +211,7 @@ def construct_ns_multiple(x_split, y_split, ns_type, change_factors, plot):
             ns_generator = Original
         else:
             ns_generator = ns_match[ns_type]
-        print(i, factor)
+        #print(i, factor)
         # train
         tmp = ns_generator(x_split[i], y_split[i], color=True)
         datalist.append(tmp.next_task(factor))

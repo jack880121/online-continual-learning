@@ -2,7 +2,7 @@ import argparse
 import random
 import numpy as np
 import torch
-from experiment.run import multiple_run_test
+from experiment.run import multiple_test
 from utils.utils import boolean_string
 
 
@@ -19,7 +19,7 @@ def main(args):
     args.trick = {'labels_trick': args.labels_trick, 'separated_softmax': args.separated_softmax,
                   'kd_trick': args.kd_trick, 'kd_trick_star': args.kd_trick_star, 'review_trick': args.review_trick,
                   'ncm_trick': args.ncm_trick}
-    multiple_run_test(args, store=args.store, save_path=args.save_path)
+    multiple_test(args, store=args.store, save_path=args.save_path)
 
 
 if __name__ == "__main__":

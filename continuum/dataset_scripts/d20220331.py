@@ -61,11 +61,12 @@ class d20220331(DatasetBase):
         root = "/tf/online-continual-learning/datasets/20220331"
         
         if self.params.mode == 'train':
-            self.train_data,self.train_label = self.my_load(root+'/train',1500,1500,run)
+            self.train_data,self.train_label = self.my_load(root+'/train',9000,9000,run)
             print('train ok')
         else:
-            self.test_data,self.test_label = self.my_load(root+'/test',300,300,0)
+            self.test_data,self.test_label = self.my_load(root+'/test',2500,2500,0)
             print('test ok',self.test_data.shape)
+       
         
     def setup(self):
         '''

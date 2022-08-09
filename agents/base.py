@@ -226,15 +226,15 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
 #                 pickle.dump([correct_lb, predict_lb], fp)
 #         return acc_array
     
-    def evaluate(self, test_loaders):
-        checkpoint = torch.load('/tf/online-continual-learning/model_state_dict.pt')
-        self.old_labels = checkpoint['old_labels']
+    def evaluate(self, test_loader):
+        checkpoint = torch.load('/tf/online-continual-learning/model_state_dict3.pt')
+        self.old_labels = [0,1]
         self.buffer.current_index = checkpoint['buffer.current_index']
         self.buffer.buffer_img = checkpoint['buffer.buffer_img']
         self.buffer.buffer_label = checkpoint['buffer.buffer_label']
         
         self.model.eval()
-        acc_array = np.zeros(len(test_loaders))
+        acc_array = np.zeros(len(test_loader))
         if self.params.trick['ncm_trick'] or self.params.agent in ['ICARL', 'SCR', 'SCP']:
             exemplar_means = {}
             cls_exemplar = {cls: [] for cls in self.old_labels}
@@ -268,72 +268,73 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                 old_class_score = AverageMeter()
                 correct_lb = []
                 predict_lb = []
-            for task, test_loader in enumerate(test_loaders):
-                acc = AverageMeter()
-                sk_recall = AverageMeter()
-                sk_accuracy = AverageMeter()
-                sk_precision = AverageMeter()
-                for i, (batch_x, batch_y) in enumerate(test_loader):
-                    batch_x = maybe_cuda(batch_x, self.cuda)
-                    batch_y = maybe_cuda(batch_y, self.cuda)
-                    if self.params.trick['ncm_trick'] or self.params.agent in ['ICARL', 'SCR', 'SCP']:
-                        feature = self.model.features(batch_x)  # (batch_size, feature_size)
-                        for j in range(feature.size(0)):  # Normalize
-                            feature.data[j] = feature.data[j] / feature.data[j].norm()
-                        feature = feature.unsqueeze(2)  # (batch_size, feature_size, 1)
-                        means = torch.stack([exemplar_means[cls] for cls in self.old_labels])  # (n_classes, feature_size)
+            #for task, test_loader in enumerate(test_loaders):
+            acc = AverageMeter()
+            sk_recall = AverageMeter()
+            sk_accuracy = AverageMeter()
+            sk_precision = AverageMeter()
+            for i, batch_data in enumerate(test_loader):
+                batch_x, batch_y = batch_data
+                batch_x = maybe_cuda(batch_x, self.cuda)
+                batch_y = maybe_cuda(batch_y, self.cuda)
+                if self.params.trick['ncm_trick'] or self.params.agent in ['ICARL', 'SCR', 'SCP']:
+                    feature = self.model.features(batch_x)  # (batch_size, feature_size)
+                    for j in range(feature.size(0)):  # Normalize
+                        feature.data[j] = feature.data[j] / feature.data[j].norm()
+                    feature = feature.unsqueeze(2)  # (batch_size, feature_size, 1)
+                    means = torch.stack([exemplar_means[cls] for cls in self.old_labels])  # (n_classes, feature_size)
 
-                        #old ncm
-                        means = torch.stack([means] * batch_x.size(0))  # (batch_size, n_classes, feature_size)
-                        means = means.transpose(1, 2)
-                        feature = feature.expand_as(means)  # (batch_size, feature_size, n_classes)
-                        dists = (feature - means).pow(2).sum(1).squeeze()  # (batch_size, n_classes)
-                        _, pred_label = dists.min(1)
-                        # may be faster
-                        # feature = feature.squeeze(2).T
-                        # _, preds = torch.matmul(means, feature).max(0)
-                        correct_cnt = (np.array(self.old_labels)[
-                                           pred_label.tolist()] == batch_y.cpu().numpy()).sum().item() / batch_y.size(0)
-                        recall = recall_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
-                        accuracy = accuracy_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
-                        precision = precision_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
+                    #old ncm
+                    means = torch.stack([means] * batch_x.size(0))  # (batch_size, n_classes, feature_size)
+                    means = means.transpose(1, 2)
+                    feature = feature.expand_as(means)  # (batch_size, feature_size, n_classes)
+                    dists = (feature - means).pow(2).sum(1).squeeze()  # (batch_size, n_classes)
+                    _, pred_label = dists.min(1)
+                    # may be faster
+                    # feature = feature.squeeze(2).T
+                    # _, preds = torch.matmul(means, feature).max(0)
+                    correct_cnt = (np.array(self.old_labels)[
+                                       pred_label.tolist()] == batch_y.cpu().numpy()).sum().item() / batch_y.size(0)
+                    recall = recall_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
+                    accuracy = accuracy_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
+                    precision = precision_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
+                else:
+                    logits = self.model.forward(batch_x)
+                    _, pred_label = torch.max(logits, 1)
+                    correct_cnt = (pred_label == batch_y).sum().item()/batch_y.size(0)
+
+                if self.params.error_analysis:
+                    correct_lb += [task] * len(batch_y)
+                    for i in pred_label:
+                        predict_lb.append(self.class_task_map[i.item()])
+                    if task < self.task_seen-1:
+                        # old test
+                        total = (pred_label != batch_y).sum().item()
+                        wrong = pred_label[pred_label != batch_y]
+                        error += total
+                        on_tmp = sum([(wrong == i).sum().item() for i in self.new_labels_zombie])
+                        oo += total - on_tmp
+                        on += on_tmp
+                        old_class_score.update(logits[:, list(set(self.old_labels) - set(self.new_labels_zombie))].mean().item(), batch_y.size(0))
+                    elif task == self.task_seen -1:
+                        # new test
+                        total = (pred_label != batch_y).sum().item()
+                        error += total
+                        wrong = pred_label[pred_label != batch_y]
+                        no_tmp = sum([(wrong == i).sum().item() for i in list(set(self.old_labels) - set(self.new_labels_zombie))])
+                        no += no_tmp
+                        nn += total - no_tmp
+                        new_class_score.update(logits[:, self.new_labels_zombie].mean().item(), batch_y.size(0))
                     else:
-                        logits = self.model.forward(batch_x)
-                        _, pred_label = torch.max(logits, 1)
-                        correct_cnt = (pred_label == batch_y).sum().item()/batch_y.size(0)
-
-                    if self.params.error_analysis:
-                        correct_lb += [task] * len(batch_y)
-                        for i in pred_label:
-                            predict_lb.append(self.class_task_map[i.item()])
-                        if task < self.task_seen-1:
-                            # old test
-                            total = (pred_label != batch_y).sum().item()
-                            wrong = pred_label[pred_label != batch_y]
-                            error += total
-                            on_tmp = sum([(wrong == i).sum().item() for i in self.new_labels_zombie])
-                            oo += total - on_tmp
-                            on += on_tmp
-                            old_class_score.update(logits[:, list(set(self.old_labels) - set(self.new_labels_zombie))].mean().item(), batch_y.size(0))
-                        elif task == self.task_seen -1:
-                            # new test
-                            total = (pred_label != batch_y).sum().item()
-                            error += total
-                            wrong = pred_label[pred_label != batch_y]
-                            no_tmp = sum([(wrong == i).sum().item() for i in list(set(self.old_labels) - set(self.new_labels_zombie))])
-                            no += no_tmp
-                            nn += total - no_tmp
-                            new_class_score.update(logits[:, self.new_labels_zombie].mean().item(), batch_y.size(0))
-                        else:
-                            pass
-                    acc.update(correct_cnt, batch_y.size(0))
-                    sk_accuracy.update(accuracy, batch_y.size(0))
-                    sk_precision.update(precision, batch_y.size(0))
-                    sk_recall.update(recall, batch_y.size(0))
-                accuracy = sk_accuracy.avg()
-                precision = sk_precision.avg()
-                recall = sk_recall.avg()
-                acc_array[task] = acc.avg()
+                        pass
+                #acc.update(correct_cnt, batch_y.size(0))
+                sk_accuracy.update(accuracy, batch_y.size(0))
+                sk_precision.update(precision, batch_y.size(0))
+                sk_recall.update(recall, batch_y.size(0))
+            accuracy = sk_accuracy.avg()
+            precision = sk_precision.avg()
+            recall = sk_recall.avg()
+            #acc_array[task] = acc.avg()
 #         print('acc:',acc_array)
 #         print('recall:',recall)
 #         print('accuracy:',accuracy)

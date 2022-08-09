@@ -23,11 +23,11 @@ class SupContrastReplay(ContinualLearner):
 
         )
 
-    def train_learner(self, x_train, y_train):
-        self.before_train(x_train, y_train)
+    def train_learner(self, train_set):
+        #self.before_train(x_train, y_train)
         # set up loader
-        train_dataset = dataset_transform(x_train, y_train, transform=transforms_match[self.data])
-        train_loader = data.DataLoader(train_dataset, batch_size=self.batch, shuffle=True, num_workers=0,
+        #train_dataset = dataset_transform(x_train, y_train, transform=transforms_match[self.data])
+        train_loader = data.DataLoader(train_set, batch_size=self.batch, shuffle=True, num_workers=0,
                                        drop_last=True)
         # set up model
         self.model = self.model.train()
@@ -53,6 +53,7 @@ class SupContrastReplay(ContinualLearner):
                         combined_labels = torch.cat((mem_y, batch_y))
                         combined_batch_aug = self.transform(combined_batch)
                         features = torch.cat([self.model.forward(combined_batch).unsqueeze(1), self.model.forward(combined_batch_aug).unsqueeze(1)], dim=1)
+#                         features = self.model.forward(combined_batch).unsqueeze(1)
                         loss = self.criterion(features, combined_labels)
                         losses.update(loss, batch_y.size(0))
                         self.opt.zero_grad()
@@ -66,11 +67,11 @@ class SupContrastReplay(ContinualLearner):
                             '==>>> it: {}, avg. loss: {:.6f}, '
                                 .format(i, losses.avg(), acc_batch.avg())
                         )
-        self.after_train()
+        #self.after_train()
         torch.save({
-                'old_labels': self.old_labels,
+                #'old_labels': self.old_labels,
                 'buffer.current_index': self.buffer.current_index,
                 'buffer.buffer_img': self.buffer.buffer_img, 
                 'buffer.buffer_label': self.buffer.buffer_label, 
                 'model_state_dict': self.model.state_dict(),
-                }, 'model_state_dict.pt')
+                }, 'model_state_dict3.pt')
