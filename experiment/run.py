@@ -17,25 +17,77 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils import data
 
-def multiple(params, store=False, save_path=None):
+def method_A(params, store=False, save_path=None):
     model = setup_architecture(params)
-#     checkpoint = torch.load('/tf/online-continual-learning/model_state_dict3.pt')
-#     model.load_state_dict(checkpoint['model_state_dict'])
     model = maybe_cuda(model, params.cuda)
     opt = setup_opt(params.optimizer, model, params.learning_rate, params.weight_decay)
     agent = agents[params.agent](model, opt, params)
     
-    path = "/tf/online-continual-learning/datasets/20220331/train"
-    train_set = torchvision.datasets.ImageFolder(path, transform=transforms.Compose([
+    trainpath = "/tf/online-continual-learning/datasets/20220331/train"
+    train_set = torchvision.datasets.ImageFolder(trainpath, transform=transforms.Compose([
         transforms.Resize((200, 200)),
         transforms.ToTensor(),
         transforms.Normalize((0.3333, 0.2919, 0.2369),(0.2554, 0.2322, 0.1586)) 
     ]))
     print(len(train_set))
     print(train_set.class_to_idx)
-    agent.train_learner(train_set)
+    train_loader = data.DataLoader(train_set, batch_size=params.batch, shuffle=True, num_workers=0,
+                                       drop_last=True)
+    
+    testpath = "/tf/online-continual-learning/datasets/20220331/test"
+    test_set = torchvision.datasets.ImageFolder(testpath, transform=transforms.Compose([
+        transforms.Resize((200, 200)),
+        transforms.ToTensor(),
+        transforms.Normalize((0.3333, 0.2919, 0.2369),(0.2554, 0.2322, 0.1586)) 
+    ]))
+    print(len(test_set))
+    print(test_set.class_to_idx)
+    test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=0)
+        
+    agent.train_learner_A(train_loader)
+    accuracy,recall,precision = agent.evaluate(test_loader)
+    print("accuracy {}----recall {}----precision {}".format(accuracy,recall,precision))
 
-def multiple_test(params, store=False, save_path=None):
+def method_B(params, store=False, save_path=None):
+    model = setup_architecture(params)
+    model = maybe_cuda(model, params.cuda)
+    opt = setup_opt(params.optimizer, model, params.learning_rate, params.weight_decay)
+    agent = agents[params.agent](model, opt, params)
+    
+    trainpath = "/tf/online-continual-learning/datasets/20220331/train"
+    train_set = torchvision.datasets.ImageFolder(trainpath, transform=transforms.Compose([
+        transforms.Resize((200, 200)),
+        transforms.ToTensor(),
+        transforms.Normalize((0.3333, 0.2919, 0.2369),(0.2554, 0.2322, 0.1586)) 
+    ]))
+    print(len(train_set))
+    print(train_set.class_to_idx)
+    train_loader = data.DataLoader(train_set, batch_size=params.batch, shuffle=True, num_workers=0,
+                                       drop_last=True)
+    
+    testpath = "/tf/online-continual-learning/datasets/20220331/test"
+    test_set = torchvision.datasets.ImageFolder(testpath, transform=transforms.Compose([
+        transforms.Resize((200, 200)),
+        transforms.ToTensor(),
+        transforms.Normalize((0.3333, 0.2919, 0.2369),(0.2554, 0.2322, 0.1586)) 
+    ]))
+    print(len(test_set))
+    print(test_set.class_to_idx)
+    test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=0)
+    
+    writer = SummaryWriter('/tf/online-continual-learning/resultB')
+    
+    for run in range(params.num_runs):
+        agent.train_learner_B(train_loader,run)
+        accuracy,recall,precision = agent.evaluate(test_loader)
+        writer.add_scalar('accuracy', accuracy, run)
+        writer.add_scalar('recall', recall, run)
+        writer.add_scalar('precision', precision, run)
+        print("accuracy {}----recall {}----precision {}".format(accuracy,recall,precision))
+    
+    
+
+def method_A_test(params, store=False, save_path=None):
     model = setup_architecture(params)
     checkpoint = torch.load('/tf/online-continual-learning/model_state_dict3.pt')
     model.load_state_dict(checkpoint['model_state_dict'])

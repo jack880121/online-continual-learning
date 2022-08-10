@@ -2,7 +2,7 @@ import argparse
 import random
 import numpy as np
 import torch
-from experiment.run import multiple
+from experiment.run import method_A,method_B
 from utils.utils import boolean_string
 
 
@@ -19,7 +19,7 @@ def main(args):
     args.trick = {'labels_trick': args.labels_trick, 'separated_softmax': args.separated_softmax,
                   'kd_trick': args.kd_trick, 'kd_trick_star': args.kd_trick_star, 'review_trick': args.review_trick,
                   'ncm_trick': args.ncm_trick}
-    multiple(args, store=args.store, save_path=args.save_path)
+    method_A(args, store=args.store, save_path=args.save_path)
 
 
 if __name__ == "__main__":
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     parser.add_argument('--learning_rate', dest='learning_rate', default=0.1,
                         type=float,
                         help='Learning_rate (default: %(default)s)')
-    parser.add_argument('--epoch', dest='epoch', default=1,
+    parser.add_argument('--epoch', dest='epoch', default=5,
                         type=int,
                         help='The number of epochs used for one task. (default: %(default)s)')
     parser.add_argument('--batch', dest='batch', default=10,

@@ -49,9 +49,9 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         for i in new_labels:
             self.class_task_map[i] = self.task_seen
 
-    @abstractmethod
-    def train_learner(self, x_train, y_train):
-        pass
+#     @abstractmethod
+#     def train_learner(self, x_train, y_train):
+#         pass
 
     def after_train(self):
         #self.old_labels = list(set(self.old_labels + self.new_labels))
@@ -227,7 +227,7 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
 #         return acc_array
     
     def evaluate(self, test_loader):
-        checkpoint = torch.load('/tf/online-continual-learning/model_state_dict3.pt')
+        checkpoint = torch.load('/tf/online-continual-learning/model_state_dict_A.pt')
         self.old_labels = [0,1]
         self.buffer.current_index = checkpoint['buffer.current_index']
         self.buffer.buffer_img = checkpoint['buffer.buffer_img']
