@@ -16,6 +16,7 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils import data
+from tensorboardX import SummaryWriter
 
 def method_A(params, store=False, save_path=None):
     model = setup_architecture(params)
@@ -75,7 +76,7 @@ def method_B(params, store=False, save_path=None):
     print(test_set.class_to_idx)
     test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=0)
     
-    writer = SummaryWriter('/tf/online-continual-learning/resultB')
+    writer = SummaryWriter('/tf/online-continual-learning/resultB_ep1_noaug')
     
     for run in range(params.num_runs):
         agent.train_learner_B(train_loader,run)
@@ -86,7 +87,7 @@ def method_B(params, store=False, save_path=None):
         print("accuracy {}----recall {}----precision {}".format(accuracy,recall,precision))
     
     
-
+'''
 def method_A_test(params, store=False, save_path=None):
     model = setup_architecture(params)
     checkpoint = torch.load('/tf/online-continual-learning/model_state_dict3.pt')
@@ -106,6 +107,7 @@ def method_A_test(params, store=False, save_path=None):
     test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=0)
     accuracy,recall,precision = agent.evaluate(test_loader)
     print("accuracy {}----recall {}----precision {}".format(accuracy,recall,precision))
+'''
 
 '''    
 def multiple_run(params, store=False, save_path=None):

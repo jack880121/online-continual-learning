@@ -227,7 +227,7 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
 #         return acc_array
     
     def evaluate(self, test_loader):
-        checkpoint = torch.load('/tf/online-continual-learning/model_state_dict_A.pt')
+        checkpoint = torch.load('/tf/online-continual-learning/model_state_dict_A_ep1_noaug.pt')
         self.old_labels = [0,1]
         self.buffer.current_index = checkpoint['buffer.current_index']
         self.buffer.buffer_img = checkpoint['buffer.buffer_img']

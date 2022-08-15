@@ -63,7 +63,7 @@ if __name__ == "__main__":
     parser.add_argument('--learning_rate', dest='learning_rate', default=0.1,
                         type=float,
                         help='Learning_rate (default: %(default)s)')
-    parser.add_argument('--epoch', dest='epoch', default=5,
+    parser.add_argument('--epoch', dest='epoch', default=1,
                         type=int,
                         help='The number of epochs used for one task. (default: %(default)s)')
     parser.add_argument('--batch', dest='batch', default=10,
