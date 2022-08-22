@@ -25,80 +25,58 @@ class SupContrastReplay(ContinualLearner):
 
         )
     def train_learner_A(self, train_loader):
-#         self.before_train(x_train, y_train)
-#         set up loader
-#         train_dataset = dataset_transform(x_train, y_train, transform=transforms_match[self.data])
-#         train_loader = data.DataLoader(train_set, batch_size=self.batch, shuffle=True, num_workers=0,
-#                                        drop_last=True)
         # set up model
         self.model = self.model.train()
 
         # setup tracker
         losses = AverageMeter()
-        acc_batch = AverageMeter()
         
-        writer = SummaryWriter('/tf/online-continual-learning/resultA_ep1_noaug')
+        for i, batch_data in enumerate(train_loader):
+            batch_x, batch_y = batch_data
+            batch_x = maybe_cuda(batch_x, self.cuda)
+            batch_y = maybe_cuda(batch_y, self.cuda)
 
-        for ep in range(self.epoch):
-            start = time.time()
-            for i, batch_data in enumerate(train_loader):
-                # batch update
-                batch_x, batch_y = batch_data
-                batch_x = maybe_cuda(batch_x, self.cuda)
-                batch_y = maybe_cuda(batch_y, self.cuda)
+            for j in range(self.mem_iters):
+                mem_x, mem_y = self.buffer.retrieve(x=batch_x, y=batch_y)
 
-                for j in range(self.mem_iters):
-                    mem_x, mem_y = self.buffer.retrieve(x=batch_x, y=batch_y)
+                if mem_x.size(0) > 0:
+                    mem_x = maybe_cuda(mem_x, self.cuda)
+                    mem_y = maybe_cuda(mem_y, self.cuda)
+                    combined_batch = torch.cat((mem_x, batch_x))
+                    combined_labels = torch.cat((mem_y, batch_y))
+                    combined_batch_aug = self.transform(combined_batch)
+                    features = torch.cat([self.model.forward(combined_batch).unsqueeze(1), self.model.forward(combined_batch_aug).unsqueeze(1)], dim=1)
+                    loss = self.criterion(features, combined_labels)
+                    losses.update(loss, batch_y.size(0))
+                    self.opt.zero_grad()
+                    loss.backward()
+                    self.opt.step()
 
-                    if mem_x.size(0) > 0:
-                        mem_x = maybe_cuda(mem_x, self.cuda)
-                        mem_y = maybe_cuda(mem_y, self.cuda)
-                        combined_batch = torch.cat((mem_x, batch_x))
-                        combined_labels = torch.cat((mem_y, batch_y))
-#                         combined_batch_aug = self.transform(combined_batch)
-#                         features = torch.cat([self.model.forward(combined_batch).unsqueeze(1), self.model.forward(combined_batch_aug).unsqueeze(1)], dim=1)
-                        features = self.model.forward(combined_batch).unsqueeze(1)
-                        loss = self.criterion(features, combined_labels)
-                        losses.update(loss, batch_y.size(0))
-                        self.opt.zero_grad()
-                        loss.backward()
-                        self.opt.step()
+            # update mem
+            self.buffer.update(batch_x, batch_y)
 
-                # update mem
-                self.buffer.update(batch_x, batch_y)
-                if i % 100 == 1 and self.verbose:
-                        print(
-                            '==>>> it: {}, avg. loss: {:.6f}, '
-                                .format(i, losses.avg())
-                        )
-                writer.add_scalar('Loss', losses.avg(), i)
-                writer.close()
-            end = time.time()
-            print(end-start)
-            
-        #self.after_train()
+            if i % 100 == 1 and self.verbose:
+                    print(
+                        '==>>> it: {}, avg. loss: {:.6f}, '
+                            .format(i, losses.avg())
+                    )
+
         torch.save({
-                #'old_labels': self.old_labels,
                 'buffer.current_index': self.buffer.current_index,
                 'buffer.buffer_img': self.buffer.buffer_img, 
                 'buffer.buffer_label': self.buffer.buffer_label, 
                 'model_state_dict': self.model.state_dict(),
-                }, 'model_state_dict_A_ep1_noaug.pt')
+                }, '/tf/online-continual-learning/result/model_state_dict_A_ep50.pt')
+        return losses.avg()
         
     def train_learner_B(self, train_loader,run):
-#         self.before_train(x_train, y_train)
-#         set up loader
-#         train_dataset = dataset_transform(x_train, y_train, transform=transforms_match[self.data])
-#         train_loader = data.DataLoader(train_set, batch_size=self.batch, shuffle=True, num_workers=0,
-#                                        drop_last=True)
         # set up model
         self.model = self.model.train()
 
         # setup tracker
         losses = AverageMeter()
-        acc_batch = AverageMeter()
         
-        writer = SummaryWriter('/tf/online-continual-learning/resultB_ep1_noaug')
+        writer = SummaryWriter('/tf/online-continual-learning/result/resultB_ep1_noaug')
 
         for ep in range(self.epoch):
             for i, batch_data in enumerate(train_loader):
@@ -106,7 +84,6 @@ class SupContrastReplay(ContinualLearner):
                     break
              
                 if i>=((len(train_loader)//10)*run)  and i<((len(train_loader)//10)*(run+1)):
-                    # batch update
                     batch_x, batch_y = batch_data
                     batch_x = maybe_cuda(batch_x, self.cuda)
                     batch_y = maybe_cuda(batch_y, self.cuda)
@@ -119,9 +96,8 @@ class SupContrastReplay(ContinualLearner):
                             mem_y = maybe_cuda(mem_y, self.cuda)
                             combined_batch = torch.cat((mem_x, batch_x))
                             combined_labels = torch.cat((mem_y, batch_y))
-#                             combined_batch_aug = self.transform(combined_batch)
-#                             features = torch.cat([self.model.forward(combined_batch).unsqueeze(1), self.model.forward(combined_batch_aug).unsqueeze(1)], dim=1)
-                            features = self.model.forward(combined_batch).unsqueeze(1)
+                            combined_batch_aug = self.transform(combined_batch)
+                            features = torch.cat([self.model.forward(combined_batch).unsqueeze(1), self.model.forward(combined_batch_aug).unsqueeze(1)], dim=1)
                             loss = self.criterion(features, combined_labels)
                             losses.update(loss, batch_y.size(0))
                             self.opt.zero_grad()
@@ -135,13 +111,12 @@ class SupContrastReplay(ContinualLearner):
                                 '==>>> it: {}, avg. loss: {:.6f}, '
                                     .format(i, losses.avg())
                             )
-                    writer.add_scalar('Loss', losses.avg(), i)
-                    writer.close()
-        #self.after_train()
-        torch.save({
-                #'old_labels': self.old_labels,
-                'buffer.current_index': self.buffer.current_index,
-                'buffer.buffer_img': self.buffer.buffer_img, 
-                'buffer.buffer_label': self.buffer.buffer_label, 
-                'model_state_dict': self.model.state_dict(),
-                }, 'model_state_dict_B_ep1_noaug.pt')
+            writer.add_scalar('Training Loss', losses.avg(), ep)
+            writer.close()
+            torch.save({
+                    'epoch': ep,
+                    'buffer.current_index': self.buffer.current_index,
+                    'buffer.buffer_img': self.buffer.buffer_img, 
+                    'buffer.buffer_label': self.buffer.buffer_label, 
+                    'model_state_dict': self.model.state_dict(),
+                    }, 'model_state_dict_B_ep1_noaug.pt')

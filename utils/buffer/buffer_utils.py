@@ -7,14 +7,14 @@ import random
 
 
 def random_retrieve(buffer, num_retrieve, excl_indices=None, return_indices=False):
-    filled_indices = np.arange(buffer.current_index)
+    filled_indices = np.arange(buffer.current_index)    #已存在的index
     if excl_indices is not None:
         excl_indices = list(excl_indices)
     else:
         excl_indices = []
-    valid_indices = np.setdiff1d(filled_indices, np.array(excl_indices))
+    valid_indices = np.setdiff1d(filled_indices, np.array(excl_indices)) #前者扣掉後者重複的結果
     num_retrieve = min(num_retrieve, valid_indices.shape[0])
-    indices = torch.from_numpy(np.random.choice(valid_indices, num_retrieve, replace=False)).long()
+    indices = torch.from_numpy(np.random.choice(valid_indices, num_retrieve, replace=False)).long()  #隨機挑不重複並轉成tensor
 
     x = buffer.buffer_img[indices]
 
