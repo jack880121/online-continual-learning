@@ -1,6 +1,5 @@
 import time
 import numpy as np
-from continuum.continuum import continuum
 from continuum.data_utils import setup_test_loader
 from utils.name_match import agents
 from utils.setup_elements import setup_opt, setup_architecture
@@ -92,12 +91,18 @@ def method_B(params, store=False, save_path=None):
     print(test_set.class_to_idx)
     test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=0)
     
-    writer = SummaryWriter('/tf/online-continual-learning/result/resultB_ep1_noaug')
+    writer = SummaryWriter('/tf/online-continual-learning/result/resultB_ep50')
+    
+    start = time.time()
     
     for run in range(params.num_runs):
         agent.train_learner_B(train_loader,run)
-        accuracy,recall,precision = agent.evaluate(test_loader)
+        accuracy,recall,precision,testloss = agent.evaluate(test_loader)
         writer.add_scalar('accuracy', accuracy, run)
         writer.add_scalar('recall', recall, run)
         writer.add_scalar('precision', precision, run)
+        writer.add_scalar('Testing Loss', testloss, run)
         print("accuracy {}----recall {}----precision {}".format(accuracy,recall,precision))
+     
+    end = time.time()
+    print(end-start)

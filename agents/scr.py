@@ -10,6 +10,7 @@ import torch.nn as nn
 from tensorboardX import SummaryWriter
 import time
 
+
 class SupContrastReplay(ContinualLearner):
     def __init__(self, model, opt, params):
         super(SupContrastReplay, self).__init__(model, opt, params)
@@ -76,7 +77,7 @@ class SupContrastReplay(ContinualLearner):
         # setup tracker
         losses = AverageMeter()
         
-        writer = SummaryWriter('/tf/online-continual-learning/result/resultB_ep1_noaug')
+        writer = SummaryWriter('/tf/online-continual-learning/result/resultB_ep50')
 
         for ep in range(self.epoch):
             for i, batch_data in enumerate(train_loader):
@@ -111,12 +112,13 @@ class SupContrastReplay(ContinualLearner):
                                 '==>>> it: {}, avg. loss: {:.6f}, '
                                     .format(i, losses.avg())
                             )
-            writer.add_scalar('Training Loss', losses.avg(), ep)
-            writer.close()
+            writer.add_scalar('Training Loss', losses.avg(), ep+run*self.epoch)
+
             torch.save({
+                    'run': run,
                     'epoch': ep,
                     'buffer.current_index': self.buffer.current_index,
                     'buffer.buffer_img': self.buffer.buffer_img, 
                     'buffer.buffer_label': self.buffer.buffer_label, 
                     'model_state_dict': self.model.state_dict(),
-                    }, 'model_state_dict_B_ep1_noaug.pt')
+                    }, '/tf/online-continual-learning/result/model_state_dict_B_ep50.pt')
