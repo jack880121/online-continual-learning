@@ -151,7 +151,7 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             sk_recall = AverageMeter()
             sk_accuracy = AverageMeter()
             sk_precision = AverageMeter()
-            losses = AverageMeter()
+#             losses = AverageMeter()
             for i, batch_data in enumerate(test_loader):
                 batch_x, batch_y = batch_data
                 batch_x = maybe_cuda(batch_x, self.cuda)
@@ -161,9 +161,8 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                     for j in range(feature.size(0)):  # Normalize
                         feature.data[j] = feature.data[j] / feature.data[j].norm()
                     
-                    loss = self.criterion(feature, batch_y)
-                    
                     feature = feature.unsqueeze(2)  # (batch_size, feature_size, 1)
+#                     loss = self.criterion(feature, batch_y)
                     means = torch.stack([exemplar_means[cls] for cls in self.old_labels])  # (n_classes, feature_size)
 
                     #old ncm
@@ -189,10 +188,10 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                 sk_accuracy.update(accuracy, batch_y.size(0))
                 sk_precision.update(precision, batch_y.size(0))
                 sk_recall.update(recall, batch_y.size(0))
-                losses.update(loss, batch_y.size(0))
+#                 losses.update(loss, batch_y.size(0))
             accuracy = sk_accuracy.avg()
             precision = sk_precision.avg()
             recall = sk_recall.avg()
-            loss = losses.avg()
+#             loss = losses.avg()
             #acc_array[task] = acc.avg()
-        return accuracy,recall,precision,loss
+        return accuracy,recall,precision
