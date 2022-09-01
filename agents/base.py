@@ -116,7 +116,7 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         return self.model.forward(x)
     
     def evaluate(self, test_loader):
-        checkpoint = torch.load('/tf/online-continual-learning/result/model_state_dict_A_ep50.pt')
+        checkpoint = torch.load('/tf/online-continual-learning/result/model_state_dict_A_ep1.pt')
         self.old_labels = [0,1]
         self.buffer.current_index = checkpoint['buffer.current_index']
         self.buffer.buffer_img = checkpoint['buffer.buffer_img']
@@ -151,7 +151,7 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             sk_recall = AverageMeter()
             sk_accuracy = AverageMeter()
             sk_precision = AverageMeter()
-#             losses = AverageMeter()
+            losses = AverageMeter()
             for i, batch_data in enumerate(test_loader):
                 batch_x, batch_y = batch_data
                 batch_x = maybe_cuda(batch_x, self.cuda)
@@ -162,7 +162,6 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                         feature.data[j] = feature.data[j] / feature.data[j].norm()
                     
                     feature = feature.unsqueeze(2)  # (batch_size, feature_size, 1)
-#                     loss = self.criterion(feature, batch_y)
                     means = torch.stack([exemplar_means[cls] for cls in self.old_labels])  # (n_classes, feature_size)
 
                     #old ncm
@@ -179,19 +178,18 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                     recall = recall_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
                     accuracy = accuracy_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
                     precision = precision_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
+                    loss = F.cross_entropy(np.array(self.old_labels)[pred_label.tolist()],batch_y.cpu().numpy())
                 else:
                     logits = self.model.forward(batch_x)
                     _, pred_label = torch.max(logits, 1)
                     correct_cnt = (pred_label == batch_y).sum().item()/batch_y.size(0)
 
-                #acc.update(correct_cnt, batch_y.size(0))
                 sk_accuracy.update(accuracy, batch_y.size(0))
                 sk_precision.update(precision, batch_y.size(0))
                 sk_recall.update(recall, batch_y.size(0))
-#                 losses.update(loss, batch_y.size(0))
+                losses.update(loss, batch_y.size(0))
             accuracy = sk_accuracy.avg()
             precision = sk_precision.avg()
             recall = sk_recall.avg()
-#             loss = losses.avg()
-            #acc_array[task] = acc.avg()
-        return accuracy,recall,precision
+            loss = losses.avg()
+        return accuracy,recall,precision,loss
