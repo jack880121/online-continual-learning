@@ -50,13 +50,13 @@ def method_A(params, store=False, save_path=None):
     
     for ep in range(params.epoch):
         loss = agent.train_learner_A(train_loader)
-        writer.add_scalar('Training Loss', loss, ep)
+        writer.add_scalar('Train Loss', loss, ep)
         
-        accuracy,recall,precision,testloss = agent.evaluate(test_loader)
+        accuracy,recall,precision,valloss = agent.evaluate(test_loader)
         writer.add_scalar('accuracy', accuracy, ep)
         writer.add_scalar('recall', recall, ep)
         writer.add_scalar('precision', precision, ep)
-        writer.add_scalar('Testing Loss', testloss, ep)
+        writer.add_scalar('Val Loss', valloss, ep)
         print("accuracy {}----recall {}----precision {}".format(accuracy,recall,precision))
         
         writer.add_scalar('epoch', ep, ep)
@@ -97,11 +97,11 @@ def method_B(params, store=False, save_path=None):
     
     for run in range(params.num_runs):
         agent.train_learner_B(train_loader,run)
-        accuracy,recall,precision,testloss = agent.evaluate(test_loader)
+        accuracy,recall,precision,valloss = agent.evaluate(test_loader)
         writer.add_scalar('accuracy', accuracy, run)
         writer.add_scalar('recall', recall, run)
         writer.add_scalar('precision', precision, run)
-        writer.add_scalar('Testing Loss', testloss, run)
+        writer.add_scalar('Val Loss', valloss, run)
         print("accuracy {}----recall {}----precision {}".format(accuracy,recall,precision))
      
     end = time.time()
