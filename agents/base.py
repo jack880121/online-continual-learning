@@ -178,7 +178,8 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                     recall = recall_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
                     accuracy = accuracy_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
                     precision = precision_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
-                    loss = F.cross_entropy(np.array(self.old_labels)[pred_label.tolist()],batch_y.cpu().numpy())
+                    cri = torch.nn.MSELoss()
+                    loss = torch.sqrt(cri(pred_label.type(torch.cuda.FloatTensor),batch_y.type(torch.cuda.FloatTensor)))
                 else:
                     logits = self.model.forward(batch_x)
                     _, pred_label = torch.max(logits, 1)

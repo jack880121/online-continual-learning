@@ -1,5 +1,5 @@
 import numpy as np
-import cv2
+#import cv2
 import os
 from torchvision import datasets
 from continuum.data_utils import create_task_composition, load_task_with_labels

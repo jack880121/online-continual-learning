@@ -1,6 +1,6 @@
 import time
 import numpy as np
-from continuum.data_utils import setup_test_loader
+#from continuum.data_utils import setup_test_loader
 from utils.name_match import agents
 from utils.setup_elements import setup_opt, setup_architecture
 from utils.utils import maybe_cuda
