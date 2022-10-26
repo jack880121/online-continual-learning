@@ -116,7 +116,7 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         return self.model.forward(x)
     
     def evaluate(self, test_loader):
-        checkpoint = torch.load('/tf/online-continual-learning/result/model_state_dict_A_ep1.pt')
+        checkpoint = torch.load('/tf/online-continual-learning/result/model_state_dict_B_ep20.pt')
         self.old_labels = [0,1]
         self.buffer.current_index = checkpoint['buffer.current_index']
         self.buffer.buffer_img = checkpoint['buffer.buffer_img']
@@ -185,10 +185,10 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                     _, pred_label = torch.max(logits, 1)
                     correct_cnt = (pred_label == batch_y).sum().item()/batch_y.size(0)
 
-                sk_accuracy.update(accuracy, batch_y.size(0))
-                sk_precision.update(precision, batch_y.size(0))
-                sk_recall.update(recall, batch_y.size(0))
-                losses.update(loss, batch_y.size(0))
+                sk_accuracy.update(accuracy.item(), batch_y.size(0))
+                sk_precision.update(precision.item(), batch_y.size(0))
+                sk_recall.update(recall.item(), batch_y.size(0))
+                losses.update(loss.item(), batch_y.size(0))
             accuracy = sk_accuracy.avg()
             precision = sk_precision.avg()
             recall = sk_recall.avg()

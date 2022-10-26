@@ -48,7 +48,7 @@ class SupContrastReplay(ContinualLearner):
                     combined_batch_aug = self.transform(combined_batch)
                     features = torch.cat([self.model.forward(combined_batch).unsqueeze(1), self.model.forward(combined_batch_aug).unsqueeze(1)], dim=1)
                     loss = self.criterion(features, combined_labels)
-                    losses.update(loss, batch_y.size(0))
+                    losses.update(loss.item(), batch_y.size(0))
                     self.opt.zero_grad()
                     loss.backward()
                     self.opt.step()
@@ -67,7 +67,7 @@ class SupContrastReplay(ContinualLearner):
                 'buffer.buffer_img': self.buffer.buffer_img, 
                 'buffer.buffer_label': self.buffer.buffer_label, 
                 'model_state_dict': self.model.state_dict(),
-                }, '/tf/online-continual-learning/result/model_state_dict_A_ep1.pt')
+                }, '/tf/online-continual-learning/result/model_state_dict_A_ep50.pt')
         return losses.avg()
         
     def train_learner_B(self, train_loader,run):
@@ -77,7 +77,7 @@ class SupContrastReplay(ContinualLearner):
         # setup tracker
         losses = AverageMeter()
         
-        writer = SummaryWriter('/tf/online-continual-learning/result/resultB_ep1')
+        writer = SummaryWriter('/tf/online-continual-learning/result/resultB_ep20')
 
         for ep in range(self.epoch):
             for i, batch_data in enumerate(train_loader):
@@ -100,7 +100,7 @@ class SupContrastReplay(ContinualLearner):
                             combined_batch_aug = self.transform(combined_batch)
                             features = torch.cat([self.model.forward(combined_batch).unsqueeze(1), self.model.forward(combined_batch_aug).unsqueeze(1)], dim=1)
                             loss = self.criterion(features, combined_labels)
-                            losses.update(loss, batch_y.size(0))
+                            losses.update(loss.item(), batch_y.size(0))
                             self.opt.zero_grad()
                             loss.backward()
                             self.opt.step()
@@ -121,4 +121,4 @@ class SupContrastReplay(ContinualLearner):
                     'buffer.buffer_img': self.buffer.buffer_img, 
                     'buffer.buffer_label': self.buffer.buffer_label, 
                     'model_state_dict': self.model.state_dict(),
-                    }, '/tf/online-continual-learning/result/model_state_dict_B_ep1.pt')
+                    }, '/tf/online-continual-learning/result/model_state_dict_B_ep20.pt')

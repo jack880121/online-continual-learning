@@ -19,14 +19,14 @@ def main(args):
     args.trick = {'labels_trick': args.labels_trick, 'separated_softmax': args.separated_softmax,
                   'kd_trick': args.kd_trick, 'kd_trick_star': args.kd_trick_star, 'review_trick': args.review_trick,
                   'ncm_trick': args.ncm_trick}
-    method_A(args, store=args.store, save_path=args.save_path)
+    method_B(args, store=args.store, save_path=args.save_path)
 
 
 if __name__ == "__main__":
     # Commandline arguments
     parser = argparse.ArgumentParser(description="Online Continual Learning PyTorch")
     ########################General#########################
-    parser.add_argument('--num_runs', dest='num_runs', default=1, type=int,
+    parser.add_argument('--num_runs', dest='num_runs', default=10, type=int,
                         help='Number of runs (default: %(default)s)')
     parser.add_argument('--mode', dest='mode', default='train', type=str,
                         help='train or test')
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     parser.add_argument('--learning_rate', dest='learning_rate', default=0.1,
                         type=float,
                         help='Learning_rate (default: %(default)s)')
-    parser.add_argument('--epoch', dest='epoch', default=1,
+    parser.add_argument('--epoch', dest='epoch', default=20,
                         type=int,
                         help='The number of epochs used for one task. (default: %(default)s)')
     parser.add_argument('--batch', dest='batch', default=10,
@@ -128,7 +128,7 @@ if __name__ == "__main__":
                         help='Random sampling batch size to estimate score')
 
     ########################ASER########################
-    parser.add_argument('--k', dest='k', default=5,
+    parser.add_argument('--k', dest='k', default=200,
                         type=int,
                         help='Number of nearest neighbors (K) to perform ASER (default: %(default)s)')
 
@@ -138,7 +138,7 @@ if __name__ == "__main__":
                              ' "asv" - Use extremal values of Adversarial SV and Cooperative SV,'
                              ' "asvm" - Use mean values of Adversarial SV and Cooperative SV')
 
-    parser.add_argument('--n_smp_cls', dest='n_smp_cls', default=2.0,
+    parser.add_argument('--n_smp_cls', dest='n_smp_cls', default=10.0,
                         type=float,
                         help='Maximum number of samples per class for random sampling (default: %(default)s)')
 
