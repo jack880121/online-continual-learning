@@ -11,6 +11,23 @@ def conv3x3(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
                      padding=1, bias=False)
 
+class SELayer(nn.Module):                #se
+    def __init__(self, channel, reduction=10):
+        super(SELayer, self).__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Sequential(
+            nn.Linear(channel, channel // reduction, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Linear(channel // reduction, channel, bias=False),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        b, c, _, _ = x.size()
+        y = self.avg_pool(x).view(b, c)
+        y = self.fc(y).view(b, c, 1, 1)
+        return x * y.expand_as(x)
+    
 class BasicBlock(nn.Module):
     expansion = 1
 
@@ -20,6 +37,7 @@ class BasicBlock(nn.Module):
         self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = conv3x3(planes, planes)
         self.bn2 = nn.BatchNorm2d(planes)
+        #self.se = SELayer(planes, 10) #se
 
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != self.expansion * planes:
@@ -32,6 +50,7 @@ class BasicBlock(nn.Module):
     def forward(self, x):
         out = relu(self.bn1(self.conv1(x)))
         out = self.bn2(self.conv2(out))
+        #out = self.se(out) #se
         out += self.shortcut(x)
         out = relu(out)
         return out
@@ -115,6 +134,7 @@ def Reduced_ResNet18(nclasses, nf=20, bias=True):
     """
     return ResNet(BasicBlock, [2, 2, 2, 2], nclasses, nf, bias)
 
+
 def ResNet18(nclasses, nf=64, bias=True):
     return ResNet(BasicBlock, [2, 2, 2, 2], nclasses, nf, bias)
 
@@ -139,7 +159,7 @@ def ResNet152(nclasses, nf=64, bias=True):
 
 class SupConResNet(nn.Module):
     """backbone + projection head"""
-    def __init__(self, dim_in=5760, head='mlp', feat_dim=128):
+    def __init__(self, dim_in=5760, head='mlp', feat_dim=128): #5760
         super(SupConResNet, self).__init__()
         #self.encoder = Reduced_ResNet18(100)
         self.encoder = Reduced_ResNet18(2)
@@ -159,6 +179,7 @@ class SupConResNet(nn.Module):
 
     def forward(self, x):
         feat = self.encoder.features(x)
+        #print(feat.shape)
         if self.head:
             feat = F.normalize(self.head(feat), dim=1)
         else:

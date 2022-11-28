@@ -60,10 +60,10 @@ if __name__ == "__main__":
     ########################Optimizer#########################
     parser.add_argument('--optimizer', dest='optimizer', default='SGD', choices=['SGD', 'Adam'],
                         help='Optimizer (default: %(default)s)')
-    parser.add_argument('--learning_rate', dest='learning_rate', default=0.1,
+    parser.add_argument('--learning_rate', dest='learning_rate', default=0.1,  
                         type=float,
                         help='Learning_rate (default: %(default)s)')
-    parser.add_argument('--epoch', dest='epoch', default=20,
+    parser.add_argument('--epoch', dest='epoch', default=5,
                         type=int,
                         help='The number of epochs used for one task. (default: %(default)s)')
     parser.add_argument('--batch', dest='batch', default=10,

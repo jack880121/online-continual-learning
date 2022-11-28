@@ -5,7 +5,7 @@ from agents.base import ContinualLearner
 from continuum.data_utils import dataset_transform
 from utils.setup_elements import transforms_match, input_size_match
 from utils.utils import maybe_cuda, AverageMeter
-from kornia.augmentation import RandomResizedCrop, RandomHorizontalFlip, ColorJitter, RandomGrayscale
+from kornia.augmentation import RandomResizedCrop, RandomHorizontalFlip, ColorJitter, RandomGrayscale, RandomVerticalFlip
 import torch.nn as nn
 from tensorboardX import SummaryWriter
 import time
@@ -19,10 +19,11 @@ class SupContrastReplay(ContinualLearner):
         self.eps_mem_batch = params.eps_mem_batch
         self.mem_iters = params.mem_iters
         self.transform = nn.Sequential(
-            RandomResizedCrop(size=(input_size_match[self.params.data][1], input_size_match[self.params.data][2]), scale=(0.2, 1.)),
-            RandomHorizontalFlip(),
-            ColorJitter(0.4, 0.4, 0.4, 0.1, p=0.8),
-            RandomGrayscale(p=0.2)
+            #RandomResizedCrop(size=(input_size_match[self.params.data][1], input_size_match[self.params.data][2]), scale=(0.2, 1.)),
+            RandomVerticalFlip(),
+            RandomHorizontalFlip()#,
+            #ColorJitter(0.4, 0.4, 0.4, 0.1, p=0.8),
+            #RandomGrayscale(p=0.2)
 
         )
     def train_learner_A(self, train_loader):
@@ -77,7 +78,7 @@ class SupContrastReplay(ContinualLearner):
         # setup tracker
         losses = AverageMeter()
         
-        writer = SummaryWriter('/tf/online-continual-learning/result/resultB_ep20')
+        writer = SummaryWriter('/tf/online-continual-learning/result/resultB_t')
 
         for ep in range(self.epoch):
             for i, batch_data in enumerate(train_loader):
@@ -105,6 +106,14 @@ class SupContrastReplay(ContinualLearner):
                             loss.backward()
                             self.opt.step()
 
+#                     combined_batch_aug = self.transform(batch_x)
+#                     features = torch.cat([self.model.forward(batch_x).unsqueeze(1), self.model.forward(combined_batch_aug).unsqueeze(1)], dim=1)
+#                     loss = self.criterion(features, batch_y)
+#                     losses.update(loss.item(), batch_y.size(0))
+#                     self.opt.zero_grad()
+#                     loss.backward()
+#                     self.opt.step()
+
                     # update mem
                     self.buffer.update(batch_x, batch_y)
                     if i % 100 == 1 and self.verbose:
@@ -121,4 +130,4 @@ class SupContrastReplay(ContinualLearner):
                     'buffer.buffer_img': self.buffer.buffer_img, 
                     'buffer.buffer_label': self.buffer.buffer_label, 
                     'model_state_dict': self.model.state_dict(),
-                    }, '/tf/online-continual-learning/result/model_state_dict_B_ep20.pt')
+                    }, '/tf/online-continual-learning/result/model_state_dict_B_t.pt')

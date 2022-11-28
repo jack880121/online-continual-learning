@@ -63,6 +63,7 @@ def method_A(params, store=False, save_path=None):
         
     end = time.time()
     print(end-start)
+    writer.add_scalar('time', end-start, 1)
     
 def method_B(params, store=False, save_path=None):
     model = setup_architecture(params)
@@ -91,7 +92,7 @@ def method_B(params, store=False, save_path=None):
     print(test_set.class_to_idx)
     test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=0)
     
-    writer = SummaryWriter('/tf/online-continual-learning/result/resultB_ep20')
+    writer = SummaryWriter('/tf/online-continual-learning/result/resultB_t')
     
     start = time.time()
     
@@ -106,3 +107,4 @@ def method_B(params, store=False, save_path=None):
      
     end = time.time()
     print(end-start)
+    writer.add_scalar('time', end-start, 1)
