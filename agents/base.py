@@ -147,11 +147,11 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                 mu_y.data = mu_y.data / mu_y.data.norm()  # Normalize
                 exemplar_means[cls] = mu_y
         with torch.no_grad():
-            acc = AverageMeter()
+#             acc = AverageMeter()
             sk_recall = AverageMeter()
             sk_accuracy = AverageMeter()
             sk_precision = AverageMeter()
-            losses = AverageMeter()
+#             losses = AverageMeter()
             for i, batch_data in enumerate(test_loader):
                 batch_x, batch_y = batch_data
                 batch_x = maybe_cuda(batch_x, self.cuda)
@@ -173,13 +173,15 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                     # may be faster
                     # feature = feature.squeeze(2).T
                     # _, preds = torch.matmul(means, feature).max(0)
-                    correct_cnt = (np.array(self.old_labels)[
-                                       pred_label.tolist()] == batch_y.cpu().numpy()).sum().item() / batch_y.size(0)
-                    recall = recall_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
+                    
+#                     correct_cnt = (np.array(self.old_labels)[
+#                                        pred_label.tolist()] == batch_y.cpu().numpy()).sum().item() / batch_y.size(0)
+                    
+                    recall = recall_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()]) #(128,) 的0與1
                     accuracy = accuracy_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
                     precision = precision_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
-                    cri = torch.nn.MSELoss()
-                    loss = torch.sqrt(cri(pred_label.type(torch.cuda.FloatTensor),batch_y.type(torch.cuda.FloatTensor)))
+#                     cri = torch.nn.MSELoss()
+#                     loss = torch.sqrt(cri(pred_label.type(torch.cuda.FloatTensor),batch_y.type(torch.cuda.FloatTensor)))
                 else:
                     logits = self.model.forward(batch_x)
                     _, pred_label = torch.max(logits, 1)
@@ -188,9 +190,9 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                 sk_accuracy.update(accuracy.item(), batch_y.size(0))
                 sk_precision.update(precision.item(), batch_y.size(0))
                 sk_recall.update(recall.item(), batch_y.size(0))
-                losses.update(loss.item(), batch_y.size(0))
+#                 losses.update(loss.item(), batch_y.size(0))
             accuracy = sk_accuracy.avg()
             precision = sk_precision.avg()
             recall = sk_recall.avg()
-            loss = losses.avg()
-        return accuracy,recall,precision,loss
+#             loss = losses.avg()
+        return accuracy,recall,precision #,loss

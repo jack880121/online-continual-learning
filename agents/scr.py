@@ -68,7 +68,7 @@ class SupContrastReplay(ContinualLearner):
                 'buffer.buffer_img': self.buffer.buffer_img, 
                 'buffer.buffer_label': self.buffer.buffer_label, 
                 'model_state_dict': self.model.state_dict(),
-                }, '/tf/online-continual-learning/result/model_state_dict_A_ep50.pt')
+                }, '/tf/online-continual-learning/result/model_state_dict_A_ep5.pt')
         return losses.avg()
         
     def train_learner_B(self, train_loader,run):
@@ -100,13 +100,14 @@ class SupContrastReplay(ContinualLearner):
                             combined_labels = torch.cat((mem_y, batch_y))
                             combined_batch_aug = self.transform(combined_batch)
                             features = torch.cat([self.model.forward(combined_batch).unsqueeze(1), self.model.forward(combined_batch_aug).unsqueeze(1)], dim=1)
+                            #print(features.shape)    torch.Size([30, 2, 128])
                             loss = self.criterion(features, combined_labels)
-                            losses.update(loss.item(), batch_y.size(0))
+                            losses.update(loss.item(), batch_y.size(0))  
                             self.opt.zero_grad()
                             loss.backward()
                             self.opt.step()
 
-#                     combined_batch_aug = self.transform(batch_x)
+#                     combined_batch_aug = self.transform(batch_x) 不包含memory資料
 #                     features = torch.cat([self.model.forward(batch_x).unsqueeze(1), self.model.forward(combined_batch_aug).unsqueeze(1)], dim=1)
 #                     loss = self.criterion(features, batch_y)
 #                     losses.update(loss.item(), batch_y.size(0))
@@ -121,11 +122,12 @@ class SupContrastReplay(ContinualLearner):
                                 '==>>> it: {}, avg. loss: {:.6f}, '
                                     .format(i, losses.avg())
                             )
-            writer.add_scalar('Train Loss', losses.avg(), ep+run*self.epoch)
+                    
+            writer.add_scalar('train_loss', losses.avg(), ep+run*self.epoch)
 
             torch.save({
-                    'run': run,
-                    'epoch': ep,
+                    #'run': run,
+                    #'epoch': ep,
                     'buffer.current_index': self.buffer.current_index,
                     'buffer.buffer_img': self.buffer.buffer_img, 
                     'buffer.buffer_label': self.buffer.buffer_label, 

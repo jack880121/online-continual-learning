@@ -44,7 +44,7 @@ def method_A(params, store=False, save_path=None):
     print(test_set.class_to_idx)
     test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=0)
     
-    writer = SummaryWriter('/tf/online-continual-learning/result/resultA_ep50')
+    writer = SummaryWriter('/tf/online-continual-learning/result/resultA_ep5')
     
     start = time.time()
     
@@ -90,21 +90,27 @@ def method_B(params, store=False, save_path=None):
     ]))
     print(len(test_set))
     print(test_set.class_to_idx)
-    test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=0)
+    test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=0,
+                                       drop_last=True)
     
     writer = SummaryWriter('/tf/online-continual-learning/result/resultB_t')
     
-    start = time.time()
-    
+    totaltime = 0
     for run in range(params.num_runs):
+        start = time.time()
+        
         agent.train_learner_B(train_loader,run)
-        accuracy,recall,precision,valloss = agent.evaluate(test_loader)
-        writer.add_scalar('accuracy', accuracy, run)
-        writer.add_scalar('recall', recall, run)
-        writer.add_scalar('precision', precision, run)
-        writer.add_scalar('Val Loss', valloss, run)
-        print("accuracy {}----recall {}----precision {}".format(accuracy,recall,precision))
+        train_accuracy,train_recall,train_precision = agent.evaluate(train_loader)
+        test_accuracy,test_recall,test_precision = agent.evaluate(test_loader)
+        writer.add_scalars('accuracy', {'train_accuracy':train_accuracy,'test_accuracy':test_accuracy}, run)
+        writer.add_scalars('recall', {'train_recall':train_recall,'test_recall':test_recall}, run)
+        writer.add_scalars('precision', {'train_precision':train_precision,'test_precision':test_precision}, run)
+        print("train_accuracy {}----train_recall {}----train_precision {}".format(train_accuracy,train_recall,train_precision))
+        print("test_accuracy {}----test_recall {}----test_precision {}".format(test_accuracy,test_recall,test_precision))
      
-    end = time.time()
-    print(end-start)
-    writer.add_scalar('time', end-start, 1)
+        end = time.time()
+        print(end-start)
+        writer.add_scalar('time', end-start, run)
+        totaltime += end-start
+        
+    print(totaltime)

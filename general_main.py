@@ -72,7 +72,7 @@ if __name__ == "__main__":
     parser.add_argument('--test_batch', dest='test_batch', default=128,
                         type=int,
                         help='Test batch size (default: %(default)s)')
-    parser.add_argument('--weight_decay', dest='weight_decay', type=float, default=0,
+    parser.add_argument('--weight_decay', dest='weight_decay', type=float, default=0,   
                         help='weight_decay')
 
     ########################Data#########################
