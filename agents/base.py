@@ -126,10 +126,10 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         acc_array = np.zeros(len(test_loader))
         if self.params.trick['ncm_trick'] or self.params.agent in ['ICARL', 'SCR', 'SCP']:
             exemplar_means = {}
-            cls_exemplar = {cls: [] for cls in self.old_labels}
+            cls_exemplar = {cls: [] for cls in self.old_labels}    #{0: [], 1: []}
             buffer_filled = self.buffer.current_index
             for x, y in zip(self.buffer.buffer_img[:buffer_filled], self.buffer.buffer_label[:buffer_filled]):
-                cls_exemplar[y.item()].append(x)
+                cls_exemplar[y.item()].append(x)            #(1037,1963)
             for cls, exemplar in cls_exemplar.items():
                 features = []
                 # Extract feature for each exemplar in p_y
@@ -187,9 +187,9 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                     _, pred_label = torch.max(logits, 1)
                     correct_cnt = (pred_label == batch_y).sum().item()/batch_y.size(0)
 
-                sk_accuracy.update(accuracy.item(), batch_y.size(0))
-                sk_precision.update(precision.item(), batch_y.size(0))
-                sk_recall.update(recall.item(), batch_y.size(0))
+                sk_accuracy.update(accuracy.item(), 1)  #batch_y.size(0)
+                sk_precision.update(precision.item(), 1)
+                sk_recall.update(recall.item(), 1)
 #                 losses.update(loss.item(), batch_y.size(0))
             accuracy = sk_accuracy.avg()
             precision = sk_precision.avg()

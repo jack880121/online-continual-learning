@@ -100,6 +100,9 @@ def method_B(params, store=False, save_path=None):
         start = time.time()
         
         agent.train_learner_B(train_loader,run)
+        end2 = time.time()
+        print('traintime',end2-start)
+        
         train_accuracy,train_recall,train_precision = agent.evaluate(train_loader)
         test_accuracy,test_recall,test_precision = agent.evaluate(test_loader)
         writer.add_scalars('accuracy', {'train_accuracy':train_accuracy,'test_accuracy':test_accuracy}, run)
@@ -113,4 +116,4 @@ def method_B(params, store=False, save_path=None):
         writer.add_scalar('time', end-start, run)
         totaltime += end-start
         
-    print(totaltime)
+    print('totaltime',totaltime)

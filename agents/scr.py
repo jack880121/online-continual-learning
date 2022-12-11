@@ -19,7 +19,7 @@ class SupContrastReplay(ContinualLearner):
         self.eps_mem_batch = params.eps_mem_batch
         self.mem_iters = params.mem_iters
         self.transform = nn.Sequential(
-            #RandomResizedCrop(size=(input_size_match[self.params.data][1], input_size_match[self.params.data][2]), scale=(0.2, 1.)),
+            RandomResizedCrop(size=(input_size_match[self.params.data][1], input_size_match[self.params.data][2]), scale=(0.7, 1.)),
             RandomVerticalFlip(),
             RandomHorizontalFlip()#,
             #ColorJitter(0.4, 0.4, 0.4, 0.1, p=0.8),
@@ -96,13 +96,12 @@ class SupContrastReplay(ContinualLearner):
                         if mem_x.size(0) > 0:
                             mem_x = maybe_cuda(mem_x, self.cuda)
                             mem_y = maybe_cuda(mem_y, self.cuda)
-                            combined_batch = torch.cat((mem_x, batch_x))
+                            combined_batch = torch.cat((mem_x, batch_x))   #torch.Size([30, 3, 200, 200])
                             combined_labels = torch.cat((mem_y, batch_y))
-                            combined_batch_aug = self.transform(combined_batch)
-                            features = torch.cat([self.model.forward(combined_batch).unsqueeze(1), self.model.forward(combined_batch_aug).unsqueeze(1)], dim=1)
-                            #print(features.shape)    torch.Size([30, 2, 128])
+                            combined_batch_aug = self.transform(combined_batch)   #torch.Size([30, 3, 200, 200])
+                            features = torch.cat([self.model.forward(combined_batch).unsqueeze(1), self.model.forward(combined_batch_aug).unsqueeze(1)], dim=1)    #torch.Size([30, 2, 128])
                             loss = self.criterion(features, combined_labels)
-                            losses.update(loss.item(), batch_y.size(0))  
+                            losses.update(loss.item(), 1) #batch_y.size(0)
                             self.opt.zero_grad()
                             loss.backward()
                             self.opt.step()
