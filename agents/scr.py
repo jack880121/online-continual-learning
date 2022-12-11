@@ -82,29 +82,25 @@ class SupContrastReplay(ContinualLearner):
 
         for ep in range(self.epoch):
             for i, batch_data in enumerate(train_loader):
-                if i==((len(train_loader)//10)*(run+1)):
-                    break
-             
-                if i>=((len(train_loader)//10)*run)  and i<((len(train_loader)//10)*(run+1)):
-                    batch_x, batch_y = batch_data
-                    batch_x = maybe_cuda(batch_x, self.cuda)
-                    batch_y = maybe_cuda(batch_y, self.cuda)
+                batch_x, batch_y = batch_data
+                batch_x = maybe_cuda(batch_x, self.cuda)
+                batch_y = maybe_cuda(batch_y, self.cuda)
 
-                    for j in range(self.mem_iters):
-                        mem_x, mem_y = self.buffer.retrieve(x=batch_x, y=batch_y)
+                for j in range(self.mem_iters):
+                    mem_x, mem_y = self.buffer.retrieve(x=batch_x, y=batch_y)
 
-                        if mem_x.size(0) > 0:
-                            mem_x = maybe_cuda(mem_x, self.cuda)
-                            mem_y = maybe_cuda(mem_y, self.cuda)
-                            combined_batch = torch.cat((mem_x, batch_x))   #torch.Size([30, 3, 200, 200])
-                            combined_labels = torch.cat((mem_y, batch_y))
-                            combined_batch_aug = self.transform(combined_batch)   #torch.Size([30, 3, 200, 200])
-                            features = torch.cat([self.model.forward(combined_batch).unsqueeze(1), self.model.forward(combined_batch_aug).unsqueeze(1)], dim=1)    #torch.Size([30, 2, 128])
-                            loss = self.criterion(features, combined_labels)
-                            losses.update(loss.item(), 1) #batch_y.size(0)
-                            self.opt.zero_grad()
-                            loss.backward()
-                            self.opt.step()
+                    if mem_x.size(0) > 0:
+                        mem_x = maybe_cuda(mem_x, self.cuda)
+                        mem_y = maybe_cuda(mem_y, self.cuda)
+                        combined_batch = torch.cat((mem_x, batch_x))   #torch.Size([30, 3, 200, 200])
+                        combined_labels = torch.cat((mem_y, batch_y))
+                        combined_batch_aug = self.transform(combined_batch)   #torch.Size([30, 3, 200, 200])
+                        features = torch.cat([self.model.forward(combined_batch).unsqueeze(1), self.model.forward(combined_batch_aug).unsqueeze(1)], dim=1)    #torch.Size([30, 2, 128])
+                        loss = self.criterion(features, combined_labels)
+                        losses.update(loss.item(), 1) #batch_y.size(0)
+                        self.opt.zero_grad()
+                        loss.backward()
+                        self.opt.step()
 
 #                     combined_batch_aug = self.transform(batch_x) 不包含memory資料
 #                     features = torch.cat([self.model.forward(batch_x).unsqueeze(1), self.model.forward(combined_batch_aug).unsqueeze(1)], dim=1)
@@ -114,13 +110,13 @@ class SupContrastReplay(ContinualLearner):
 #                     loss.backward()
 #                     self.opt.step()
 
-                    # update mem
-                    self.buffer.update(batch_x, batch_y)
-                    if i % 100 == 1 and self.verbose:
-                            print(
-                                '==>>> it: {}, avg. loss: {:.6f}, '
-                                    .format(i, losses.avg())
-                            )
+                # update mem
+                self.buffer.update(batch_x, batch_y)
+                if i % 100 == 1 and self.verbose:
+                        print(
+                            '==>>> it: {}, avg. loss: {:.6f}, '
+                                .format(i, losses.avg())
+                        )
                     
             writer.add_scalar('train_loss', losses.avg(), ep+run*self.epoch)
 

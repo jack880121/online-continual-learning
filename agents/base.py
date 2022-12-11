@@ -116,13 +116,15 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         return self.model.forward(x)
     
     def evaluate(self, test_loader):
+        self.model.eval()
+        
         checkpoint = torch.load('/tf/online-continual-learning/result/model_state_dict_B_t.pt')
         self.old_labels = [0,1]
         self.buffer.current_index = checkpoint['buffer.current_index']
         self.buffer.buffer_img = checkpoint['buffer.buffer_img']
         self.buffer.buffer_label = checkpoint['buffer.buffer_label']
         
-        self.model.eval()
+        
         acc_array = np.zeros(len(test_loader))
         if self.params.trick['ncm_trick'] or self.params.agent in ['ICARL', 'SCR', 'SCP']:
             exemplar_means = {}
