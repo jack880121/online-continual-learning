@@ -45,7 +45,7 @@ def method_A(params, store=False, save_path=None):
     print(test_set.class_to_idx)
     test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=0)
     
-    writer = SummaryWriter('/tf/online-continual-learning/result/resultA_ep5')
+    writer = SummaryWriter('/tf/online-continual-learning/result/resultA_ep10')
     
     start = time.time()
     
@@ -108,7 +108,7 @@ def method_B(params, store=False, save_path=None):
         train_loader = data.DataLoader(train_set_spilit, batch_size=params.batch, shuffle=True, num_workers=0,
                                            drop_last=True)
         start = time.time()
-        agent.train_learner_B(train_loader,run)
+        agent.train_learner_B(train_loader,run,writer)
         end2 = time.time()
         print('traintime',end2-start)
         

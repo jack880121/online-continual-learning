@@ -68,23 +68,22 @@ class SupContrastReplay(ContinualLearner):
                 'buffer.buffer_img': self.buffer.buffer_img, 
                 'buffer.buffer_label': self.buffer.buffer_label, 
                 'model_state_dict': self.model.state_dict(),
-                }, '/tf/online-continual-learning/result/model_state_dict_A_ep5.pt')
+                }, '/tf/online-continual-learning/result/model_state_dict_A_ep10.pt')
         return losses.avg()
         
-    def train_learner_B(self, train_loader,run):
+    def train_learner_B(self, train_loader,run,writer):
         # set up model
         self.model = self.model.train()
 
         # setup tracker
         losses = AverageMeter()
         
-        writer = SummaryWriter('/tf/online-continual-learning/result/resultB_t')
-
         for ep in range(self.epoch):
             for i, batch_data in enumerate(train_loader):
                 batch_x, batch_y = batch_data
-                batch_x = maybe_cuda(batch_x, self.cuda)
-                batch_y = maybe_cuda(batch_y, self.cuda)
+                batch_x = maybe_cuda(batch_x, self.cuda)   #batch_x.shape torch.Size([10, 3, 200, 200])
+                batch_y = maybe_cuda(batch_y, self.cuda)   #batch_y.shape torch.Size([10])
+  
 
                 for j in range(self.mem_iters):
                     mem_x, mem_y = self.buffer.retrieve(x=batch_x, y=batch_y)
@@ -113,18 +112,15 @@ class SupContrastReplay(ContinualLearner):
                 # update mem
                 self.buffer.update(batch_x, batch_y)
                 if i % 100 == 1 and self.verbose:
-                        print(
-                            '==>>> it: {}, avg. loss: {:.6f}, '
-                                .format(i, losses.avg())
-                        )
+                    print('==>>> it: {}, avg. loss: {:.6f}, '.format(i, losses.avg()))
                     
             writer.add_scalar('train_loss', losses.avg(), ep+run*self.epoch)
 
-            torch.save({
-                    #'run': run,
-                    #'epoch': ep,
-                    'buffer.current_index': self.buffer.current_index,
-                    'buffer.buffer_img': self.buffer.buffer_img, 
-                    'buffer.buffer_label': self.buffer.buffer_label, 
-                    'model_state_dict': self.model.state_dict(),
-                    }, '/tf/online-continual-learning/result/model_state_dict_B_t.pt')
+        torch.save({
+                #'run': run,
+                #'epoch': ep,
+                'buffer.current_index': self.buffer.current_index,
+                'buffer.buffer_img': self.buffer.buffer_img, 
+                'buffer.buffer_label': self.buffer.buffer_label, 
+                'model_state_dict': self.model.state_dict(),
+                }, '/tf/online-continual-learning/result/model_state_dict_B_t.pt')

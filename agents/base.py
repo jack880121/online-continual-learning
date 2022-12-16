@@ -40,55 +40,55 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         self.lbl_inv_map = {}
         self.class_task_map = {}
 
-    def before_train(self, x_train, y_train):
-        new_labels = list(set(y_train.tolist()))
-        self.new_labels += new_labels
-        for i, lbl in enumerate(new_labels):
-            self.lbl_inv_map[lbl] = len(self.old_labels) + i
+#     def before_train(self, x_train, y_train):
+#         new_labels = list(set(y_train.tolist()))
+#         self.new_labels += new_labels
+#         for i, lbl in enumerate(new_labels):
+#             self.lbl_inv_map[lbl] = len(self.old_labels) + i
 
-        for i in new_labels:
-            self.class_task_map[i] = self.task_seen
+#         for i in new_labels:
+#             self.class_task_map[i] = self.task_seen
 
 #     @abstractmethod
 #     def train_learner(self, x_train, y_train):
 #         pass
 
-    def after_train(self):
-        #self.old_labels = list(set(self.old_labels + self.new_labels))
-        self.old_labels += self.new_labels
-        self.new_labels_zombie = copy.deepcopy(self.new_labels)
-        self.new_labels.clear()
-        self.task_seen += 1
-        if self.params.trick['review_trick'] and hasattr(self, 'buffer'):
-            self.model.train()
-            mem_x = self.buffer.buffer_img[:self.buffer.current_index]
-            mem_y = self.buffer.buffer_label[:self.buffer.current_index]
-            # criterion = torch.nn.CrossEntropyLoss(reduction='mean')
-            if mem_x.size(0) > 0:
-                rv_dataset = TensorDataset(mem_x, mem_y)
-                rv_loader = DataLoader(rv_dataset, batch_size=self.params.eps_mem_batch, shuffle=True, num_workers=0,
-                                       drop_last=True)
-                for ep in range(1):
-                    for i, batch_data in enumerate(rv_loader):
-                        # batch update
-                        batch_x, batch_y = batch_data
-                        batch_x = maybe_cuda(batch_x, self.cuda)
-                        batch_y = maybe_cuda(batch_y, self.cuda)
-                        logits = self.model.forward(batch_x)
-                        if self.params.agent == 'SCR':
-                            logits = torch.cat([self.model.forward(batch_x).unsqueeze(1),
-                                                  self.model.forward(self.transform(batch_x)).unsqueeze(1)], dim=1)
-                        loss = self.criterion(logits, batch_y)
-                        self.opt.zero_grad()
-                        loss.backward()
-                        params = [p for p in self.model.parameters() if p.requires_grad and p.grad is not None]
-                        grad = [p.grad.clone()/10. for p in params]
-                        for g, p in zip(grad, params):
-                            p.grad.data.copy_(g)
-                        self.opt.step()
+#     def after_train(self):
+#         #self.old_labels = list(set(self.old_labels + self.new_labels))
+#         self.old_labels += self.new_labels
+#         self.new_labels_zombie = copy.deepcopy(self.new_labels)
+#         self.new_labels.clear()
+#         self.task_seen += 1
+#         if self.params.trick['review_trick'] and hasattr(self, 'buffer'):
+#             self.model.train()
+#             mem_x = self.buffer.buffer_img[:self.buffer.current_index]
+#             mem_y = self.buffer.buffer_label[:self.buffer.current_index]
+#             # criterion = torch.nn.CrossEntropyLoss(reduction='mean')
+#             if mem_x.size(0) > 0:
+#                 rv_dataset = TensorDataset(mem_x, mem_y)
+#                 rv_loader = DataLoader(rv_dataset, batch_size=self.params.eps_mem_batch, shuffle=True, num_workers=0,
+#                                        drop_last=True)
+#                 for ep in range(1):
+#                     for i, batch_data in enumerate(rv_loader):
+#                         # batch update
+#                         batch_x, batch_y = batch_data
+#                         batch_x = maybe_cuda(batch_x, self.cuda)
+#                         batch_y = maybe_cuda(batch_y, self.cuda)
+#                         logits = self.model.forward(batch_x)
+#                         if self.params.agent == 'SCR':
+#                             logits = torch.cat([self.model.forward(batch_x).unsqueeze(1),
+#                                                   self.model.forward(self.transform(batch_x)).unsqueeze(1)], dim=1)
+#                         loss = self.criterion(logits, batch_y)
+#                         self.opt.zero_grad()
+#                         loss.backward()
+#                         params = [p for p in self.model.parameters() if p.requires_grad and p.grad is not None]
+#                         grad = [p.grad.clone()/10. for p in params]
+#                         for g, p in zip(grad, params):
+#                             p.grad.data.copy_(g)
+#                         self.opt.step()
 
-        if self.params.trick['kd_trick'] or self.params.agent == 'LWF':
-            self.kd_manager.update_teacher(self.model)
+#         if self.params.trick['kd_trick'] or self.params.agent == 'LWF':
+#             self.kd_manager.update_teacher(self.model)
 
     def criterion(self, logits, labels):
         labels = labels.clone()
@@ -125,7 +125,6 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         self.buffer.buffer_label = checkpoint['buffer.buffer_label']
         
         
-        acc_array = np.zeros(len(test_loader))
         if self.params.trick['ncm_trick'] or self.params.agent in ['ICARL', 'SCR', 'SCP']:
             exemplar_means = {}
             cls_exemplar = {cls: [] for cls in self.old_labels}    #{0: [], 1: []}
@@ -148,6 +147,7 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                     mu_y = features.mean(0).squeeze()
                 mu_y.data = mu_y.data / mu_y.data.norm()  # Normalize
                 exemplar_means[cls] = mu_y
+
         with torch.no_grad():
 #             acc = AverageMeter()
             sk_recall = AverageMeter()
@@ -167,11 +167,13 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                     means = torch.stack([exemplar_means[cls] for cls in self.old_labels])  # (n_classes, feature_size)
 
                     #old ncm
-                    means = torch.stack([means] * batch_x.size(0))  # (batch_size, n_classes, feature_size)
-                    means = means.transpose(1, 2)
-                    feature = feature.expand_as(means)  # (batch_size, feature_size, n_classes)
-                    dists = (feature - means).pow(2).sum(1).squeeze()  # (batch_size, n_classes)
-                    _, pred_label = dists.min(1)
+                    means = torch.stack([means] * batch_x.size(0))  # (batch_size, n_classes, feature_size)  
+                    means = means.transpose(1, 2)               # means.shape torch.Size([128, 5760, 2])
+                    feature = feature.expand_as(means)  # (batch_size, feature_size, n_classes)   feature.shape torch.Size([128, 5760, 2])
+                    dists = (feature - means).pow(2).sum(1).squeeze()  # (batch_size, n_classes)   dists.shape torch.Size([128, 2])
+            
+                    _, pred_label = dists.min(1)      # pred_label.shape torch.Size([128])
+ 
                     # may be faster
                     # feature = feature.squeeze(2).T
                     # _, preds = torch.matmul(means, feature).max(0)
