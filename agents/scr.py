@@ -2,8 +2,7 @@ import torch
 from torch.utils import data
 from utils.buffer.buffer import Buffer
 from agents.base import ContinualLearner
-from continuum.data_utils import dataset_transform
-from utils.setup_elements import transforms_match, input_size_match
+from utils.setup_elements import input_size_match
 from utils.utils import maybe_cuda, AverageMeter
 from kornia.augmentation import RandomResizedCrop, RandomHorizontalFlip, ColorJitter, RandomGrayscale, RandomVerticalFlip
 import torch.nn as nn

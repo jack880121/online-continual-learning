@@ -3,9 +3,7 @@ import abc
 import numpy as np
 import torch
 from torch.nn import functional as F
-from utils.kd_manager import KdManager
 from utils.utils import maybe_cuda, AverageMeter
-from torch.utils.data import TensorDataset, DataLoader
 import copy
 from utils.loss import SupConLoss
 import pickle
@@ -28,67 +26,7 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         self.verbose = params.verbose
         self.old_labels = []
         self.new_labels = []
-        self.task_seen = 0
-        self.kd_manager = KdManager()
-        self.error_list = []
-        self.new_class_score = []
-        self.old_class_score = []
-        self.fc_norm_new = []
-        self.fc_norm_old = []
-        self.bias_norm_new = []
-        self.bias_norm_old = []
         self.lbl_inv_map = {}
-        self.class_task_map = {}
-
-#     def before_train(self, x_train, y_train):
-#         new_labels = list(set(y_train.tolist()))
-#         self.new_labels += new_labels
-#         for i, lbl in enumerate(new_labels):
-#             self.lbl_inv_map[lbl] = len(self.old_labels) + i
-
-#         for i in new_labels:
-#             self.class_task_map[i] = self.task_seen
-
-#     @abstractmethod
-#     def train_learner(self, x_train, y_train):
-#         pass
-
-#     def after_train(self):
-#         #self.old_labels = list(set(self.old_labels + self.new_labels))
-#         self.old_labels += self.new_labels
-#         self.new_labels_zombie = copy.deepcopy(self.new_labels)
-#         self.new_labels.clear()
-#         self.task_seen += 1
-#         if self.params.trick['review_trick'] and hasattr(self, 'buffer'):
-#             self.model.train()
-#             mem_x = self.buffer.buffer_img[:self.buffer.current_index]
-#             mem_y = self.buffer.buffer_label[:self.buffer.current_index]
-#             # criterion = torch.nn.CrossEntropyLoss(reduction='mean')
-#             if mem_x.size(0) > 0:
-#                 rv_dataset = TensorDataset(mem_x, mem_y)
-#                 rv_loader = DataLoader(rv_dataset, batch_size=self.params.eps_mem_batch, shuffle=True, num_workers=0,
-#                                        drop_last=True)
-#                 for ep in range(1):
-#                     for i, batch_data in enumerate(rv_loader):
-#                         # batch update
-#                         batch_x, batch_y = batch_data
-#                         batch_x = maybe_cuda(batch_x, self.cuda)
-#                         batch_y = maybe_cuda(batch_y, self.cuda)
-#                         logits = self.model.forward(batch_x)
-#                         if self.params.agent == 'SCR':
-#                             logits = torch.cat([self.model.forward(batch_x).unsqueeze(1),
-#                                                   self.model.forward(self.transform(batch_x)).unsqueeze(1)], dim=1)
-#                         loss = self.criterion(logits, batch_y)
-#                         self.opt.zero_grad()
-#                         loss.backward()
-#                         params = [p for p in self.model.parameters() if p.requires_grad and p.grad is not None]
-#                         grad = [p.grad.clone()/10. for p in params]
-#                         for g, p in zip(grad, params):
-#                             p.grad.data.copy_(g)
-#                         self.opt.step()
-
-#         if self.params.trick['kd_trick'] or self.params.agent == 'LWF':
-#             self.kd_manager.update_teacher(self.model)
 
     def criterion(self, logits, labels):
         labels = labels.clone()
