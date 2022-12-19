@@ -45,15 +45,16 @@ class SupConLoss(nn.Module):
         elif labels is None and mask is None:
             mask = torch.eye(batch_size, dtype=torch.float32).to(device)
         elif labels is not None:
-            labels = labels.contiguous().view(-1, 1)
+            #print('labels',labels)      #tensor([0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0])
+            labels = labels.contiguous().view(-1, 1)        #labels.shape torch.Size([30, 1])
             if labels.shape[0] != batch_size:
                 raise ValueError('Num of labels does not match num of features')
-            mask = torch.eq(labels, labels.T).float().to(device)
+            mask = torch.eq(labels, labels.T).float().to(device)       #mask.shape torch.Size([30, 30])   對角線一定為1 1代表跟自己同類
         else:
             mask = mask.float().to(device)
 
-        contrast_count = features.shape[1]
-        contrast_feature = torch.cat(torch.unbind(features, dim=1), dim=0)
+        contrast_count = features.shape[1]    #features.shape torch.Size([30, 2, mlp size])
+        contrast_feature = torch.cat(torch.unbind(features, dim=1), dim=0)   #torch.Size([60, mlp size])
         if self.contrast_mode == 'one':
             anchor_feature = features[:, 0]
             anchor_count = 1
@@ -64,33 +65,33 @@ class SupConLoss(nn.Module):
             raise ValueError('Unknown mode: {}'.format(self.contrast_mode))
 
         # compute logits
-        anchor_dot_contrast = torch.div(
+        anchor_dot_contrast = torch.div(                     #torch.Size([60, 60])
             torch.matmul(anchor_feature, contrast_feature.T),
             self.temperature)
         # for numerical stability
         logits_max, _ = torch.max(anchor_dot_contrast, dim=1, keepdim=True)
-        logits = anchor_dot_contrast - logits_max.detach()
+        logits = anchor_dot_contrast - logits_max.detach()            #torch.Size([60, 60])
 
         # tile mask
-        mask = mask.repeat(anchor_count, contrast_count)
+        mask = mask.repeat(anchor_count, contrast_count)     #torch.Size([60, 60]) 複製4倍 因為擴增2倍時標籤都一樣
         # mask-out self-contrast cases
-        logits_mask = torch.scatter(
+        logits_mask = torch.scatter(                  #logits_mask.shape torch.Size([60, 60])    全部為1但對角線全0的矩陣
             torch.ones_like(mask),
             1,
             torch.arange(batch_size * anchor_count).view(-1, 1).to(device),
             0
         )
-        mask = mask * logits_mask
+        mask = mask * logits_mask             #原本的mask 將對角線變0的矩陣 因為自己不跟自己對比 1的地方代表同類
 
         # compute log_prob
-        exp_logits = torch.exp(logits) * logits_mask
-        log_prob = logits - torch.log(exp_logits.sum(1, keepdim=True))
+        exp_logits = torch.exp(logits) * logits_mask   #exp_logits.shape torch.Size([60, 60])  0~1
+        log_prob = logits - torch.log(exp_logits.sum(1, keepdim=True))        #log_prob.shape torch.Size([60, 60])   log以e為底
+        #sum為50幾 log後為4.多 
 
         # compute mean of log-likelihood over positive
-        mean_log_prob_pos = (mask * log_prob).sum(1) / mask.sum(1)
+        mean_log_prob_pos = (mask * log_prob).sum(1) / mask.sum(1)    #-150/37 or -85/21  約-4.072多
 
         # loss
         loss = -1 * mean_log_prob_pos
         loss = loss.view(anchor_count, batch_size).mean()
-
         return loss
