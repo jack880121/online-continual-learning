@@ -18,13 +18,12 @@ class SupContrastReplay(ContinualLearner):
         self.eps_mem_batch = params.eps_mem_batch
         self.mem_iters = params.mem_iters
         self.transform = nn.Sequential(
-            RandomResizedCrop(size=(input_size_match[self.params.data][1], input_size_match[self.params.data][2]), scale=(0.7, 1.)),
+            #RandomResizedCrop(size=(input_size_match[self.params.data][1], input_size_match[self.params.data][2]), scale=(0.7, 1.)),
             RandomVerticalFlip(),
-            RandomHorizontalFlip()#,
-            #ColorJitter(0.4, 0.4, 0.4, 0.1, p=0.8),
-            #RandomGrayscale(p=0.2)
-
+            RandomHorizontalFlip(),
+            ColorJitter(brightness=0.2,contrast=0.2)
         )
+        
     def train_learner_A(self, train_loader):
         # set up model
         self.model = self.model.train()
