@@ -163,6 +163,7 @@ class SupConResNet(nn.Module):
         super(SupConResNet, self).__init__()
         #self.encoder = Reduced_ResNet18(100)
         self.encoder = Reduced_ResNet18(2)
+        #self.encoder = ResNet18(2)
         if head == 'linear':
             self.head = nn.Linear(dim_in, feat_dim)
         elif head == 'mlp':

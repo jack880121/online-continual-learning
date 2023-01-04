@@ -12,6 +12,12 @@ from torch.utils import data
 from tensorboardX import SummaryWriter
 import random
 
+def t(a):
+    h = a//3600
+    m = (a-h*3600)//60
+    s = a-3600*h-60*m
+    print(str(h)+'h'+str(m)+'m'+str(s)+'s')
+    
 def method_A(params, store=False, save_path=None):
     model = setup_architecture(params)
     model = maybe_cuda(model, params.cuda)
@@ -39,7 +45,7 @@ def method_A(params, store=False, save_path=None):
     print(test_set.class_to_idx)
     test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=0)
     
-    writer = SummaryWriter('/tf/online-continual-learning/result/resultA_ep10')
+    writer = SummaryWriter('/tf/online-continual-learning/result/resultA_ep5')
     
     start = time.time()
     
@@ -58,7 +64,7 @@ def method_A(params, store=False, save_path=None):
         writer.add_scalar('epoch', ep, ep)
         
     end = time.time()
-    print(end-start)
+    t(int(end-start))
     writer.add_scalar('time', end-start, 1)
     
 def method_B(params, store=False, save_path=None):
@@ -75,7 +81,7 @@ def method_B(params, store=False, save_path=None):
     ]))
     print(len(train_set))
     print(train_set.class_to_idx)
-    train_loader_for_test = data.DataLoader(train_set, batch_size=params.batch, shuffle=True, num_workers=0,
+    train_loader_for_test = data.DataLoader(train_set, batch_size=params.test_batch, shuffle=True, num_workers=0,
                                        drop_last=True)
     
     index = [i for i in range(len(train_set))] 
@@ -104,7 +110,8 @@ def method_B(params, store=False, save_path=None):
         start = time.time()
         agent.train_learner_B(train_loader,run,writer)
         end2 = time.time()
-        print('traintime',end2-start)
+        print('traintime')
+        t(int(end2-start))
         
         train_accuracy,train_recall,train_precision = agent.evaluate(train_loader_for_test)
         test_accuracy,test_recall,test_precision = agent.evaluate(test_loader)
@@ -115,8 +122,9 @@ def method_B(params, store=False, save_path=None):
         print("test_accuracy {}----test_recall {}----test_precision {}".format(test_accuracy,test_recall,test_precision))
      
         end = time.time()
-        print(end-start)
+        t(int(end-start))
         writer.add_scalar('time', end-start, run)
         totaltime += end-start
         
-    print('totaltime',totaltime)
+    print('totaltime')
+    t(int(totaltime))

@@ -92,6 +92,7 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             sk_accuracy = AverageMeter()
             sk_precision = AverageMeter()
 #             losses = AverageMeter()
+            
             for i, batch_data in enumerate(test_loader):
                 batch_x, batch_y = batch_data
                 batch_x = maybe_cuda(batch_x, self.cuda)
