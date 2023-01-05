@@ -43,8 +43,8 @@ def method_A(params, store=False, save_path=None):
     ]))
     print(len(test_set))
     print(test_set.class_to_idx)
-    test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=0)
-    
+    test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=0,
+                                       drop_last=True)    
     writer = SummaryWriter('/tf/online-continual-learning/result/resultA_ep5')
     
     start = time.time()

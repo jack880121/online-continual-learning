@@ -47,7 +47,7 @@ class SupContrastReplay(ContinualLearner):
                     combined_batch_aug = self.transform(combined_batch)
                     features = torch.cat([self.model.forward(combined_batch).unsqueeze(1), self.model.forward(combined_batch_aug).unsqueeze(1)], dim=1)
                     loss = self.criterion(features, combined_labels)
-                    losses.update(loss.item(), batch_y.size(0))
+                    losses.update(loss.item(), 1)
                     self.opt.zero_grad()
                     loss.backward()
                     self.opt.step()
