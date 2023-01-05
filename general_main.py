@@ -15,7 +15,7 @@ def main(args):
     if args.cuda:
         torch.cuda.manual_seed(args.seed)
         torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = True
+        torch.backends.cudnn.benchmark = False
     args.trick = {'labels_trick': args.labels_trick, 'separated_softmax': args.separated_softmax,
                   'kd_trick': args.kd_trick, 'kd_trick_star': args.kd_trick_star, 'review_trick': args.review_trick,
                   'ncm_trick': args.ncm_trick}
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     parser.add_argument('--epoch', dest='epoch', default=5,
                         type=int,
                         help='The number of epochs used for one task. (default: %(default)s)')
-    parser.add_argument('--batch', dest='batch', default=10,
+    parser.add_argument('--batch', dest='batch', default=15,
                         type=int,
                         help='Batch size (default: %(default)s)')
     parser.add_argument('--test_batch', dest='test_batch', default=128,
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     parser.add_argument('--mem_size', dest='mem_size', default=3000,
                         type=int,
                         help='Memory buffer size (default: %(default)s)')
-    parser.add_argument('--eps_mem_batch', dest='eps_mem_batch', default=20,
+    parser.add_argument('--eps_mem_batch', dest='eps_mem_batch', default=15,
                         type=int,
                         help='Episode memory per batch (default: %(default)s)')
 

@@ -81,7 +81,7 @@ def method_B(params, store=False, save_path=None):
     ]))
     print(len(train_set))
     print(train_set.class_to_idx)
-    train_loader_for_test = data.DataLoader(train_set, batch_size=params.test_batch, shuffle=True, num_workers=0,
+    train_loader_for_test = data.DataLoader(train_set, batch_size=params.test_batch, shuffle=True, num_workers=2,
                                        drop_last=True)
     
     index = [i for i in range(len(train_set))] 
@@ -96,7 +96,7 @@ def method_B(params, store=False, save_path=None):
     ]))
     print(len(test_set))
     print(test_set.class_to_idx)
-    test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=0,
+    test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=2,
                                        drop_last=True)
     
     writer = SummaryWriter('/tf/online-continual-learning/result/resultB_t')
@@ -105,7 +105,7 @@ def method_B(params, store=False, save_path=None):
     for run in range(params.num_runs):
         train_set_spilit = data.Subset(train_set,index[(len(train_set)//10)*run:(len(train_set)//10)*(run+1)])
         print('train_set_spilit',len(train_set_spilit))
-        train_loader = data.DataLoader(train_set_spilit, batch_size=params.batch, shuffle=True, num_workers=0,
+        train_loader = data.DataLoader(train_set_spilit, batch_size=params.batch, shuffle=True, num_workers=2,
                                            drop_last=True)
         start = time.time()
         agent.train_learner_B(train_loader,run,writer)
