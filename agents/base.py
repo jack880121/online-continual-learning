@@ -73,12 +73,12 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                 features = []
                 # Extract feature for each exemplar in p_y
                 for ex in exemplar:
-                    feature = self.model.features(ex.unsqueeze(0)).detach().clone()
+                    feature = self.model.forward(ex.unsqueeze(0)).detach().clone()
                     feature = feature.squeeze()
                     feature.data = feature.data / feature.data.norm()  # Normalize
                     features.append(feature)
                 if len(features) == 0:
-                    mu_y = maybe_cuda(torch.normal(0, 1, size=tuple(self.model.features(x.unsqueeze(0)).detach().size())), self.cuda)
+                    mu_y = maybe_cuda(torch.normal(0, 1, size=tuple(self.model.forward(x.unsqueeze(0)).detach().size())), self.cuda)
                     mu_y = mu_y.squeeze()
                 else:
                     features = torch.stack(features)
@@ -92,13 +92,16 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             sk_accuracy = AverageMeter()
             sk_precision = AverageMeter()
 #             losses = AverageMeter()
+
+            if torch.cuda.is_available():
+                torch.backends.cudnn.benchmark = True
             
             for i, batch_data in enumerate(test_loader):
                 batch_x, batch_y = batch_data
                 batch_x = maybe_cuda(batch_x, self.cuda)
                 batch_y = maybe_cuda(batch_y, self.cuda)
                 if self.params.trick['ncm_trick'] or self.params.agent in ['ICARL', 'SCR', 'SCP']:
-                    feature = self.model.features(batch_x)  # (batch_size, feature_size)
+                    feature = self.model.forward(batch_x)  # (batch_size, feature_size)
                     for j in range(feature.size(0)):  # Normalize
                         feature.data[j] = feature.data[j] / feature.data[j].norm()
                     

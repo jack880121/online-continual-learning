@@ -32,7 +32,10 @@ def method_A(params, store=False, save_path=None):
     ]))
     print(len(train_set))
     print(train_set.class_to_idx)
-    train_loader = data.DataLoader(train_set, batch_size=params.batch, shuffle=True, num_workers=0,
+    train_loader = data.DataLoader(train_set, batch_size=params.batch, shuffle=True, num_workers=2,
+                                       drop_last=True)
+    
+    train_loader_for_test = data.DataLoader(train_set, batch_size=params.test_batch, shuffle=True, num_workers=2,
                                        drop_last=True)
     
     testpath = "/tf/online-continual-learning/datasets/20220331/test"
@@ -43,18 +46,27 @@ def method_A(params, store=False, save_path=None):
     ]))
     print(len(test_set))
     print(test_set.class_to_idx)
-    test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=0,
+    test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=2,
                                        drop_last=True)    
-    writer = SummaryWriter('/tf/online-continual-learning/result/resultA_ep5')
+    writer = SummaryWriter('/tf/online-continual-learning/result/resultA_ep5_proj')
     
     start = time.time()
     
     for ep in range(params.epoch):
+        if torch.cuda.is_available():
+            torch.backends.cudnn.benchmark = True
         loss = agent.train_learner_A(train_loader)
+        if torch.cuda.is_available():
+            torch.backends.cudnn.benchmark = False
+            
         writer.add_scalar('Train Loss', loss, ep)
         
-        train_accuracy,train_recall,train_precision = agent.evaluate(train_loader)
+        train_accuracy,train_recall,train_precision = agent.evaluate(train_loader_for_test)
+        if torch.cuda.is_available():
+            torch.backends.cudnn.benchmark = False
         test_accuracy,test_recall,test_precision = agent.evaluate(test_loader)
+        if torch.cuda.is_available():
+            torch.backends.cudnn.benchmark = False
         writer.add_scalars('accuracy', {'train_accuracy':train_accuracy,'test_accuracy':test_accuracy}, ep)
         writer.add_scalars('recall', {'train_recall':train_recall,'test_recall':test_recall}, ep)
         writer.add_scalars('precision', {'train_precision':train_precision,'test_precision':test_precision}, ep)
@@ -103,18 +115,30 @@ def method_B(params, store=False, save_path=None):
     
     totaltime = 0
     for run in range(params.num_runs):
+        print('run',run+1)
         train_set_spilit = data.Subset(train_set,index[(len(train_set)//10)*run:(len(train_set)//10)*(run+1)])
         print('train_set_spilit',len(train_set_spilit))
         train_loader = data.DataLoader(train_set_spilit, batch_size=params.batch, shuffle=True, num_workers=2,
                                            drop_last=True)
+        
+        if torch.cuda.is_available():
+            torch.backends.cudnn.benchmark = True
+            
         start = time.time()
         agent.train_learner_B(train_loader,run,writer)
         end2 = time.time()
         print('traintime')
         t(int(end2-start))
         
+        if torch.cuda.is_available():
+            torch.backends.cudnn.benchmark = False
+            
         train_accuracy,train_recall,train_precision = agent.evaluate(train_loader_for_test)
+        if torch.cuda.is_available():
+            torch.backends.cudnn.benchmark = False
         test_accuracy,test_recall,test_precision = agent.evaluate(test_loader)
+        if torch.cuda.is_available():
+            torch.backends.cudnn.benchmark = False
         writer.add_scalars('accuracy', {'train_accuracy':train_accuracy,'test_accuracy':test_accuracy}, run)
         writer.add_scalars('recall', {'train_recall':train_recall,'test_recall':test_recall}, run)
         writer.add_scalars('precision', {'train_precision':train_precision,'test_precision':test_precision}, run)
