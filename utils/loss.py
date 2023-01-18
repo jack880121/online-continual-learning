@@ -55,6 +55,7 @@ class SupConLoss(nn.Module):
 
         contrast_count = features.shape[1]    #features.shape torch.Size([30, 2, mlp size])
         contrast_feature = torch.cat(torch.unbind(features, dim=1), dim=0)   #torch.Size([60, mlp size])
+        
         if self.contrast_mode == 'one':
             anchor_feature = features[:, 0]
             anchor_count = 1

@@ -8,6 +8,7 @@ import copy
 from utils.loss import SupConLoss
 import pickle
 from sklearn.metrics import recall_score,accuracy_score,precision_score
+from models.resnet import LinearClassifier
 
 class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
     '''
@@ -117,8 +118,8 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                     _, pred_label = dists.min(1)      # pred_label.shape torch.Size([128])
  
                     # may be faster
-                    # feature = feature.squeeze(2).T
-                    # _, preds = torch.matmul(means, feature).max(0)
+#                     feature = feature.squeeze(2).T
+#                     _, pred_label = torch.matmul(means, feature).max(0)
                     
 #                     correct_cnt = (np.array(self.old_labels)[
 #                                        pred_label.tolist()] == batch_y.cpu().numpy()).sum().item() / batch_y.size(0)
@@ -131,7 +132,9 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                 else:
                     logits = self.model.forward(batch_x)
                     _, pred_label = torch.max(logits, 1)
-                    correct_cnt = (pred_label == batch_y).sum().item()/batch_y.size(0)
+                    recall = recall_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()]) #(128,) 的0與1
+                    accuracy = accuracy_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
+                    precision = precision_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
 
                 sk_accuracy.update(accuracy.item(), 1)  #batch_y.size(0)
                 sk_precision.update(precision.item(), 1)
@@ -142,3 +145,102 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             recall = sk_recall.avg()
 #             loss = losses.avg()
         return accuracy,recall,precision #,loss
+
+    def train(self, train_loader, classifier, criterion, optimizer):
+        """one epoch training"""
+        self.model.eval()
+        classifier.train()
+        
+        sk_recall = AverageMeter()
+        sk_accuracy = AverageMeter()
+        sk_precision = AverageMeter()
+        losses = AverageMeter()
+
+        for i, batch_data in enumerate(train_loader):
+            batch_x, batch_y = batch_data
+            batch_x = maybe_cuda(batch_x, self.cuda)
+            batch_y = maybe_cuda(batch_y, self.cuda)
+
+            # compute loss
+            with torch.no_grad():
+                features = self.model.features(batch_x)
+            output = classifier(features.detach())
+            loss = criterion(output.cpu(), batch_y.cpu())
+            
+            _, pred_label = torch.max(output.cpu(), 1)
+            recall = recall_score(batch_y.cpu().numpy(),pred_label) #(128,) 的0與1
+            accuracy = accuracy_score(batch_y.cpu().numpy(),pred_label)
+            precision = precision_score(batch_y.cpu().numpy(),pred_label)
+
+            sk_accuracy.update(accuracy.item(), 1)  #batch_y.size(0)
+            sk_precision.update(precision.item(), 1)
+            sk_recall.update(recall.item(), 1)
+            losses.update(loss.item(),1)
+            
+            # SGD
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+                
+#             if i%10==0:
+#                 print('accuracy',accuracy)
+#                 print('precision',precision)
+#                 print('recall',recall)
+#                 print('loss',loss)
+            
+        accuracy = sk_accuracy.avg()
+        precision = sk_precision.avg()
+        recall = sk_recall.avg()
+        loss = losses.avg()
+        print('train accuracy',accuracy)
+        print('train precision',precision)
+        print('train recall',recall)
+        print('train loss',loss)
+
+    def test(self, test_loader, classifier):
+        self.model.eval()
+        classifier.eval()
+        
+        with torch.no_grad():
+            sk_recall = AverageMeter()
+            sk_accuracy = AverageMeter()
+            sk_precision = AverageMeter()
+
+            for i, batch_data in enumerate(test_loader):
+                batch_x, batch_y = batch_data
+                batch_x = maybe_cuda(batch_x, self.cuda)
+                batch_y = maybe_cuda(batch_y, self.cuda)
+
+                
+                features = self.model.features(batch_x)
+                output = classifier(features)
+
+                _, pred_label = torch.max(output.cpu(), 1)
+                recall = recall_score(batch_y.cpu().numpy(),pred_label) #(128,) 的0與1
+                accuracy = accuracy_score(batch_y.cpu().numpy(),pred_label)
+                precision = precision_score(batch_y.cpu().numpy(),pred_label)
+
+                sk_accuracy.update(accuracy.item(), 1)  #batch_y.size(0)
+                sk_precision.update(precision.item(), 1)
+                sk_recall.update(recall.item(), 1)
+
+            accuracy = sk_accuracy.avg()
+            precision = sk_precision.avg()
+            recall = sk_recall.avg()
+            print('accuracy',accuracy)
+            print('precision',precision)
+            print('recall',recall)
+            
+    def classifier(self, train_loader, test_loader):
+        ce = torch.nn.CrossEntropyLoss(reduction='mean')
+        classifier = LinearClassifier()
+        optimizer = torch.optim.SGD(classifier.parameters(),lr=0.1,momentum=0.9)
+        if torch.cuda.is_available():
+            classifier = classifier.cuda()
+            ce = ce.cuda()
+        
+        for epoch in range(50):
+            self.train(train_loader, classifier, ce, optimizer)
+           
+        self.test(train_loader, classifier)
+        self.test(test_loader, classifier)

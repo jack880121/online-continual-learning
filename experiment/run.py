@@ -144,6 +144,8 @@ def method_B(params, store=False, save_path=None):
         writer.add_scalars('precision', {'train_precision':train_precision,'test_precision':test_precision}, run)
         print("train_accuracy {}----train_recall {}----train_precision {}".format(train_accuracy,train_recall,train_precision))
         print("test_accuracy {}----test_recall {}----test_precision {}".format(test_accuracy,test_recall,test_precision))
+        
+        agent.classifier(train_loader_for_test,test_loader)
      
         end = time.time()
         t(int(end-start))

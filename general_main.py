@@ -60,7 +60,7 @@ if __name__ == "__main__":
     ########################Optimizer#########################
     parser.add_argument('--optimizer', dest='optimizer', default='SGD', choices=['SGD', 'Adam'],
                         help='Optimizer (default: %(default)s)')
-    parser.add_argument('--learning_rate', dest='learning_rate', default=0.1,  
+    parser.add_argument('--learning_rate', dest='learning_rate', default=0.05,  
                         type=float,
                         help='Learning_rate (default: %(default)s)')
     parser.add_argument('--epoch', dest='epoch', default=5,
