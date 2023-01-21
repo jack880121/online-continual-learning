@@ -48,7 +48,7 @@ def method_A(params, store=False, save_path=None):
     print(test_set.class_to_idx)
     test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=2,
                                        drop_last=True)    
-    writer = SummaryWriter('/tf/online-continual-learning/result/resultA_ep5_proj')
+    writer = SummaryWriter('/tf/online-continual-learning/result/resultA_ep5_linear')
     
     start = time.time()
     
@@ -67,11 +67,16 @@ def method_A(params, store=False, save_path=None):
         test_accuracy,test_recall,test_precision = agent.evaluate(test_loader)
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
-        writer.add_scalars('accuracy', {'train_accuracy':train_accuracy,'test_accuracy':test_accuracy}, ep)
-        writer.add_scalars('recall', {'train_recall':train_recall,'test_recall':test_recall}, ep)
-        writer.add_scalars('precision', {'train_precision':train_precision,'test_precision':test_precision}, ep)
+            
+        tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader)
+        
+        writer.add_scalars('accuracy', {'train_accuracy':train_accuracy,'test_accuracy':test_accuracy,'train_accuracy_classifier':tra,'test_accuracy_classifier':tea}, ep)
+        writer.add_scalars('recall', {'train_recall':train_recall,'test_recall':test_recall,'train_recall_classifier':trr,'test_recall_classifier':ter}, ep)
+        writer.add_scalars('precision', {'train_precision':train_precision,'test_precision':test_precision,'train_precision_classifier':trp,'test_precision_classifier':tep}, ep)
         print("train_accuracy {}----train_recall {}----train_precision {}".format(train_accuracy,train_recall,train_precision))
         print("test_accuracy {}----test_recall {}----test_precision {}".format(test_accuracy,test_recall,test_precision))
+        print("train_accuracy_classifier {}----train_recall_classifier {}----train_precision_classifier {}".format(tra,trr,trp))
+        print("test_accuracy_classifier {}----test_recall_classifier {}----test_precision_classifier {}".format(tea,ter,tep))
         
         writer.add_scalar('epoch', ep, ep)
         
@@ -139,13 +144,16 @@ def method_B(params, store=False, save_path=None):
         test_accuracy,test_recall,test_precision = agent.evaluate(test_loader)
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
-        writer.add_scalars('accuracy', {'train_accuracy':train_accuracy,'test_accuracy':test_accuracy}, run)
-        writer.add_scalars('recall', {'train_recall':train_recall,'test_recall':test_recall}, run)
-        writer.add_scalars('precision', {'train_precision':train_precision,'test_precision':test_precision}, run)
+            
+        tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader)
+        
+        writer.add_scalars('accuracy', {'train_accuracy':train_accuracy,'test_accuracy':test_accuracy,'train_accuracy_classifier':tra,'test_accuracy_classifier':tea}, run)
+        writer.add_scalars('recall', {'train_recall':train_recall,'test_recall':test_recall,'train_recall_classifier':trr,'test_recall_classifier':ter}, run)
+        writer.add_scalars('precision', {'train_precision':train_precision,'test_precision':test_precision,'train_precision_classifier':trp,'test_precision_classifier':tep}, run)
         print("train_accuracy {}----train_recall {}----train_precision {}".format(train_accuracy,train_recall,train_precision))
         print("test_accuracy {}----test_recall {}----test_precision {}".format(test_accuracy,test_recall,test_precision))
-        
-        agent.classifier(train_loader_for_test,test_loader)
+        print("train_accuracy_classifier {}----train_recall_classifier {}----train_precision_classifier {}".format(tra,trr,trp))
+        print("test_accuracy_classifier {}----test_recall_classifier {}----test_precision_classifier {}".format(tea,ter,tep))
      
         end = time.time()
         t(int(end-start))

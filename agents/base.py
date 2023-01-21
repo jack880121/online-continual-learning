@@ -147,7 +147,6 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         return accuracy,recall,precision #,loss
 
     def train(self, train_loader, classifier, criterion, optimizer):
-        """one epoch training"""
         self.model.eval()
         classifier.train()
         
@@ -181,21 +180,15 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-                
-#             if i%10==0:
-#                 print('accuracy',accuracy)
-#                 print('precision',precision)
-#                 print('recall',recall)
-#                 print('loss',loss)
             
         accuracy = sk_accuracy.avg()
         precision = sk_precision.avg()
         recall = sk_recall.avg()
         loss = losses.avg()
-        print('train accuracy',accuracy)
-        print('train precision',precision)
-        print('train recall',recall)
-        print('train loss',loss)
+#         print('train accuracy',accuracy)
+#         print('train precision',precision)
+#         print('train recall',recall)
+#         print('train loss',loss)
 
     def test(self, test_loader, classifier):
         self.model.eval()
@@ -227,11 +220,10 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             accuracy = sk_accuracy.avg()
             precision = sk_precision.avg()
             recall = sk_recall.avg()
-            print('accuracy',accuracy)
-            print('precision',precision)
-            print('recall',recall)
             
-    def classifier(self, train_loader, test_loader):
+        return accuracy,recall,precision
+            
+    def classifier(self, train_loader, test_loader):      #linear classifier
         ce = torch.nn.CrossEntropyLoss(reduction='mean')
         classifier = LinearClassifier()
         optimizer = torch.optim.SGD(classifier.parameters(),lr=0.1,momentum=0.9)
@@ -239,8 +231,10 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             classifier = classifier.cuda()
             ce = ce.cuda()
         
-        for epoch in range(50):
+        for epoch in range(20):
             self.train(train_loader, classifier, ce, optimizer)
            
-        self.test(train_loader, classifier)
-        self.test(test_loader, classifier)
+        tra,trr,trp = self.test(train_loader, classifier)
+        tea,ter,tep = self.test(test_loader, classifier)
+        
+        return tra,trr,trp,tea,ter,tep
