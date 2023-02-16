@@ -226,12 +226,12 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
     def classifier(self, train_loader, test_loader):      #linear classifier
         ce = torch.nn.CrossEntropyLoss(reduction='mean')
         classifier = LinearClassifier()
-        optimizer = torch.optim.SGD(classifier.parameters(),lr=0.1,momentum=0.9)
+        optimizer = torch.optim.SGD(classifier.parameters(),lr=0.05,momentum=0.9)
         if torch.cuda.is_available():
             classifier = classifier.cuda()
             ce = ce.cuda()
         
-        for epoch in range(20):
+        for epoch in range(30):
             self.train(train_loader, classifier, ce, optimizer)
            
         tra,trr,trp = self.test(train_loader, classifier)

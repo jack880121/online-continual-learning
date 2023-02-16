@@ -6,6 +6,7 @@ Code adapted from https://github.com/facebookresearch/GradientEpisodicMemory
 import torch.nn.functional as F
 import torch.nn as nn
 from torch.nn.functional import relu, avg_pool2d
+import torch
 
 def conv3x3(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
@@ -27,6 +28,90 @@ class SELayer(nn.Module):                #se
         y = self.avg_pool(x).view(b, c)
         y = self.fc(y).view(b, c, 1, 1)
         return x * y.expand_as(x)
+
+# class ChannelAttention(nn.Module):
+#     def __init__(self, in_planes, ratio=16):
+#         super(ChannelAttention, self).__init__()
+#         self.avg_pool = nn.AdaptiveAvgPool2d(1)
+#         self.max_pool = nn.AdaptiveMaxPool2d(1)
+ 
+#         self.fc1   = nn.Conv2d(in_planes, in_planes // 5, 1, bias=False)
+#         self.relu1 = nn.ReLU()
+#         self.fc2   = nn.Conv2d(in_planes // 5, in_planes, 1, bias=False)
+ 
+#         self.sigmoid = nn.Sigmoid()
+ 
+#     def forward(self, x):
+#         avg_out = self.fc2(self.relu1(self.fc1(self.avg_pool(x))))
+#         max_out = self.fc2(self.relu1(self.fc1(self.max_pool(x))))
+#         out = avg_out + max_out
+#         return self.sigmoid(out)
+
+# class SpatialAttention(nn.Module):
+#     def __init__(self, kernel_size=7):
+#         super(SpatialAttention, self).__init__()
+ 
+#         assert kernel_size in (3, 7), 'kernel size must be 3 or 7'
+#         padding = 3 if kernel_size == 7 else 1
+ 
+#         self.conv1 = nn.Conv2d(2, 1, kernel_size, padding=padding, bias=False)
+#         self.sigmoid = nn.Sigmoid()
+ 
+#     def forward(self, x):
+#         avg_out = torch.mean(x, dim=1, keepdim=True)
+#         max_out, _ = torch.max(x, dim=1, keepdim=True)
+#         x = torch.cat([avg_out, max_out], dim=1)
+#         x = self.conv1(x)
+#         return self.sigmoid(x)
+    
+class ChannelAttention(nn.Module):
+    """ Channel Attention Module """
+    def __init__(self, in_channels, reduction_ratio=16):
+        super().__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d((1,1))
+        self.max_pool = nn.AdaptiveMaxPool2d((1,1))
+        self.mlp = nn.Sequential(
+            nn.Linear(in_channels, in_channels//reduction_ratio),
+            nn.ReLU(),
+            nn.Linear(in_channels//reduction_ratio, in_channels)
+        )
+    
+    def forward(self, x):
+        avg_feat = self.mlp(self.avg_pool(x).flatten(1))
+        max_feat = self.mlp(self.max_pool(x).flatten(1))
+        att_feat = avg_feat + max_feat
+        att_weight = torch.sigmoid(att_feat).unsqueeze(2).unsqueeze(3)
+        return x*att_weight
+
+
+class SpatialAttention(nn.Module):
+    """ Spatial Attention Module """
+    def __init__(self):
+        super().__init__()
+        self.Conv = nn.Sequential(
+            nn.Conv2d(2, 1, 7, stride=1, padding=3, bias=False),
+            nn.BatchNorm2d(1)
+        )
+    
+    def forward(self, x):
+        max_feat = torch.max(x, dim=1)[0].unsqueeze(1)
+        mean_feat = torch.mean(x, dim=1).unsqueeze(1)
+        att_feat = torch.cat((max_feat, mean_feat), dim=1)
+        att_weight = torch.sigmoid(self.Conv(att_feat))
+        return x*att_weight
+
+class CBAM(nn.Module):
+    """ Channel Block Attention Module """
+    def __init__(self, in_channels, reduction_ratio=16):
+        super().__init__()
+        self.CA = ChannelAttention(in_channels, reduction_ratio)
+        self.SA = SpatialAttention()
+
+    def forward(self, x):
+        feat = self.CA(x)
+        feat = self.SA(feat)
+        return feat
+
     
 class BasicBlock(nn.Module):
     expansion = 1
@@ -38,6 +123,7 @@ class BasicBlock(nn.Module):
         self.conv2 = conv3x3(planes, planes)
         self.bn2 = nn.BatchNorm2d(planes)
         #self.se = SELayer(planes, 10) #se
+        self.c = CBAM(planes)
 
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != self.expansion * planes:
@@ -51,6 +137,7 @@ class BasicBlock(nn.Module):
         out = relu(self.bn1(self.conv1(x)))
         out = self.bn2(self.conv2(out))
         #out = self.se(out) #se
+        out = self.c(out) #cbam
         out += self.shortcut(x)
         out = relu(out)
         return out
@@ -91,6 +178,9 @@ class ResNet(nn.Module):
         self.in_planes = nf
         self.conv1 = conv3x3(3, nf * 1)
         self.bn1 = nn.BatchNorm2d(nf * 1)
+#         self.ca = ChannelAttention(self.in_planes)    #cbam
+#         self.sa = SpatialAttention()                 #cbam
+#         self.c = CBAM(self.in_planes)
         self.layer1 = self._make_layer(block, nf * 1, num_blocks[0], stride=1)
         self.layer2 = self._make_layer(block, nf * 2, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block, nf * 4, num_blocks[2], stride=2)
@@ -194,7 +284,14 @@ class LinearClassifier(nn.Module):
     """Linear classifier"""
     def __init__(self, feat_dim=5760, num_classes=2):
         super(LinearClassifier, self).__init__()
-        self.fc = nn.Linear(feat_dim, num_classes)
+        #self.fc = nn.Linear(feat_dim, num_classes)
+        self.fc = nn.Sequential(
+                nn.Linear(feat_dim, 1024),
+                nn.ReLU(inplace=True),
+                nn.Linear(1024, 128),
+                nn.ReLU(inplace=True),
+                nn.Linear(128, num_classes)
+            )
 
     def forward(self, features):
         return self.fc(features)
