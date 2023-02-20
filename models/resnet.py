@@ -13,7 +13,7 @@ def conv3x3(in_planes, out_planes, stride=1):
                      padding=1, bias=False)
 
 class SELayer(nn.Module):                #se
-    def __init__(self, channel, reduction=10):
+    def __init__(self, channel, reduction=16):
         super(SELayer, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
@@ -123,7 +123,7 @@ class BasicBlock(nn.Module):
         self.conv2 = conv3x3(planes, planes)
         self.bn2 = nn.BatchNorm2d(planes)
         #self.se = SELayer(planes, 10) #se
-        self.c = CBAM(planes)
+        #self.c = CBAM(planes)         #cbam
 
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != self.expansion * planes:
@@ -137,7 +137,7 @@ class BasicBlock(nn.Module):
         out = relu(self.bn1(self.conv1(x)))
         out = self.bn2(self.conv2(out))
         #out = self.se(out) #se
-        out = self.c(out) #cbam
+        #out = self.c(out) #cbam
         out += self.shortcut(x)
         out = relu(out)
         return out
@@ -180,7 +180,8 @@ class ResNet(nn.Module):
         self.bn1 = nn.BatchNorm2d(nf * 1)
 #         self.ca = ChannelAttention(self.in_planes)    #cbam
 #         self.sa = SpatialAttention()                 #cbam
-#         self.c = CBAM(self.in_planes)
+#         self.c = CBAM(self.in_planes*8)             #cbam
+        self.se = SELayer(self.in_planes*8, 16) #se
         self.layer1 = self._make_layer(block, nf * 1, num_blocks[0], stride=1)
         self.layer2 = self._make_layer(block, nf * 2, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block, nf * 4, num_blocks[2], stride=2)
@@ -203,6 +204,8 @@ class ResNet(nn.Module):
         out = self.layer2(out)
         out = self.layer3(out)
         out = self.layer4(out)
+        #out = self.c(out)
+        out = self.se(out)
         out = avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
         return out
