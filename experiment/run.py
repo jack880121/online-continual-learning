@@ -59,7 +59,7 @@ def method_A(params, store=False, save_path=None):
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
             
-        writer.add_scalar('Train Loss', loss, ep)
+        writer.add_scalar('stage1_train_loss', loss, ep)
         
         train_accuracy,train_recall,train_precision = agent.evaluate(train_loader_for_test)
         if torch.cuda.is_available():
@@ -69,7 +69,7 @@ def method_A(params, store=False, save_path=None):
             torch.backends.cudnn.benchmark = False
         
         #linear classifier
-        tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader)
+        tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer)
         
         writer.add_scalars('accuracy', {'train_accuracy_ncm':train_accuracy,'test_accuracy_ncm':test_accuracy,'train_accuracy_linear':tra,'test_accuracy_linear':tea}, ep)
         writer.add_scalars('recall', {'train_recall_ncm':train_recall,'test_recall_ncm':test_recall,'train_recall_linear':trr,'test_recall_linear':ter}, ep)
@@ -153,7 +153,7 @@ def method_B(params, store=False, save_path=None):
             torch.backends.cudnn.benchmark = False
             
         #linear classifier    
-        tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader)
+        tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer)
         
         writer.add_scalars('accuracy', {'train_accuracy_ncm':train_accuracy,'test_accuracy_ncm':test_accuracy,'train_accuracy_linear':tra,'test_accuracy_linear':tea}, run)
         writer.add_scalars('recall', {'train_recall_ncm':train_recall,'test_recall_ncm':test_recall,'train_recall_linear':trr,'test_recall_linear':ter}, run)

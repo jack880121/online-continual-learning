@@ -185,10 +185,11 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         precision = sk_precision.avg()
         recall = sk_recall.avg()
         loss = losses.avg()
-#         print('train accuracy',accuracy)
+        print('train accuracy',accuracy)
 #         print('train precision',precision)
 #         print('train recall',recall)
 #         print('train loss',loss)
+        return loss
 
     def test(self, test_loader, classifier):
         self.model.eval()
@@ -223,7 +224,7 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             
         return accuracy,recall,precision
             
-    def classifier(self, train_loader, test_loader):      #linear classifier
+    def classifier(self, train_loader, test_loader, writer):      #linear classifier
         ce = torch.nn.CrossEntropyLoss(reduction='mean')
         classifier = LinearClassifier()
         optimizer = torch.optim.SGD(classifier.parameters(),lr=0.05,momentum=0.9)
@@ -231,8 +232,9 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             classifier = classifier.cuda()
             ce = ce.cuda()
         
-        for epoch in range(30):
-            self.train(train_loader, classifier, ce, optimizer)
+        for epoch in range(50):
+            loss = self.train(train_loader, classifier, ce, optimizer)
+            writer.add_scalar('stage2_train_loss', loss, epoch)
            
         tra,trr,trp = self.test(train_loader, classifier)
         tea,ter,tep = self.test(test_loader, classifier)

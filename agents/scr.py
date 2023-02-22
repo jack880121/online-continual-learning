@@ -112,7 +112,7 @@ class SupContrastReplay(ContinualLearner):
                 if i % 100 == 1 and self.verbose:
                     print('==>>> it: {}, avg. loss: {:.6f}, '.format(i, losses.avg()))
                     
-            writer.add_scalar('train_loss', losses.avg(), ep+run*self.epoch)
+            writer.add_scalar('stage1_train_loss', losses.avg(), ep+run*self.epoch)
 
         torch.save({
                 #'run': run,
