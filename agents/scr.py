@@ -66,7 +66,7 @@ class SupContrastReplay(ContinualLearner):
                 'buffer.buffer_img': self.buffer.buffer_img, 
                 'buffer.buffer_label': self.buffer.buffer_label, 
                 'model_state_dict': self.model.state_dict(),
-                }, '/tf/online-continual-learning/result/model_state_dict_A_lr0.05epo10.pt')
+                }, '/tf/online-continual-learning/result/model_state_dict_A_epo80.pt')
         return losses.avg()
         
     def train_learner_B(self, train_loader,run,writer):

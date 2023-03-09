@@ -48,7 +48,7 @@ def method_A(params, store=False, save_path=None):
     print(test_set.class_to_idx)
     test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=2,
                                        drop_last=True)    
-    writer = SummaryWriter('/tf/online-continual-learning/result/resultA_lr0.05epo10')
+    writer = SummaryWriter('/tf/online-continual-learning/result/resultA_epo80')
     
     start = time.time()
     
@@ -69,7 +69,7 @@ def method_A(params, store=False, save_path=None):
             torch.backends.cudnn.benchmark = False
         
         #linear classifier
-        tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer)
+        tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer,ep+5)
         
         writer.add_scalars('accuracy', {'train_accuracy_ncm':train_accuracy,'test_accuracy_ncm':test_accuracy,'train_accuracy_linear':tra,'test_accuracy_linear':tea}, ep)
         writer.add_scalars('recall', {'train_recall_ncm':train_recall,'test_recall_ncm':test_recall,'train_recall_linear':trr,'test_recall_linear':ter}, ep)
@@ -153,7 +153,7 @@ def method_B(params, store=False, save_path=None):
             torch.backends.cudnn.benchmark = False
             
         #linear classifier    
-        tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer)
+        tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer,run)
         
         writer.add_scalars('accuracy', {'train_accuracy_ncm':train_accuracy,'test_accuracy_ncm':test_accuracy,'train_accuracy_linear':tra,'test_accuracy_linear':tea}, run)
         writer.add_scalars('recall', {'train_recall_ncm':train_recall,'test_recall_ncm':test_recall,'train_recall_linear':trr,'test_recall_linear':ter}, run)

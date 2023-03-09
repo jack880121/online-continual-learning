@@ -224,7 +224,7 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             
         return accuracy,recall,precision
             
-    def classifier(self, train_loader, test_loader, writer):      #linear classifier
+    def classifier(self, train_loader, test_loader, writer, run):      #linear classifier
         ce = torch.nn.CrossEntropyLoss(reduction='mean')
         classifier = LinearClassifier()
         optimizer = torch.optim.SGD(classifier.parameters(),lr=0.05,momentum=0.9)
@@ -232,9 +232,10 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             classifier = classifier.cuda()
             ce = ce.cuda()
         
-        for epoch in range(50):
+        for epoch in range(80):
             loss = self.train(train_loader, classifier, ce, optimizer)
-            writer.add_scalar('stage2_train_loss', loss, epoch)
+            if run==9:
+                writer.add_scalar('stage2_train_loss', loss, epoch)
            
         tra,trr,trp = self.test(train_loader, classifier)
         tea,ter,tep = self.test(test_loader, classifier)
