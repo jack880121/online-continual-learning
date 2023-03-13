@@ -8,7 +8,7 @@ import copy
 from utils.loss import SupConLoss
 import pickle
 from sklearn.metrics import recall_score,accuracy_score,precision_score
-from models.resnet import LinearClassifier
+from models.resnet import LinearClassifier,ConvClassifier
 
 class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
     '''
@@ -226,8 +226,9 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             
     def classifier(self, train_loader, test_loader, writer, run):      #linear classifier
         ce = torch.nn.CrossEntropyLoss(reduction='mean')
-        classifier = LinearClassifier()
-        optimizer = torch.optim.SGD(classifier.parameters(),lr=0.05,momentum=0.9)
+#         classifier = LinearClassifier()
+        classifier = ConvClassifier()
+        optimizer = torch.optim.SGD(classifier.parameters(),lr=0.1,momentum=0.9)
         if torch.cuda.is_available():
             classifier = classifier.cuda()
             ce = ce.cuda()

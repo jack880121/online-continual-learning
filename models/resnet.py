@@ -307,3 +307,27 @@ class LinearClassifier(nn.Module):
 
     def forward(self, features):
         return self.fc(features)
+    
+class ConvClassifier(nn.Module):
+    """conv classifier"""
+    def __init__(self, num_classes=2):
+        super(ConvClassifier, self).__init__()
+        self.conv1 = conv3x3(160, 80, stride=2)
+        self.bn1 = nn.BatchNorm2d(80)
+        self.conv2 = conv3x3(80, 40, stride=2)
+        self.bn2 = nn.BatchNorm2d(40)
+        self.conv3 = conv3x3(40, num_classes, stride=2)
+        self.bn3 = nn.BatchNorm2d(num_classes)
+
+    def forward(self, x):
+        x = x.view(x.size(0), 160, 6, 6)
+#         print(x.shape)
+        x = relu(self.bn1(self.conv1(x)))
+#         print(x.shape)
+        x = relu(self.bn2(self.conv2(x)))
+#         print(x.shape)
+        x = relu(self.bn3(self.conv3(x)))
+#         print(x.shape)
+        x = x.view(x.size(0), -1)
+#         print(x.shape)
+        return x
