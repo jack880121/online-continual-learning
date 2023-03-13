@@ -5,7 +5,7 @@ Code adapted from https://github.com/facebookresearch/GradientEpisodicMemory
 """
 import torch.nn.functional as F
 import torch.nn as nn
-from torch.nn.functional import relu, avg_pool2d
+from torch.nn.functional import relu, avg_pool2d, max_pool2d
 import torch
 
 def conv3x3(in_planes, out_planes, stride=1):
@@ -199,15 +199,23 @@ class ResNet(nn.Module):
 
     def features(self, x):
         '''Features before FC layers'''
+#         print(x.shape)         #torch.Size([30, 3, 200, 200])
         out = relu(self.bn1(self.conv1(x)))
+#         print(out.shape)        #torch.Size([30, 20, 200, 200])
         out = self.layer1(out)
+#         print(out.shape)         #torch.Size([30, 20, 200, 200])
         out = self.layer2(out)
+#         print(out.shape)         #torch.Size([30, 40, 100, 100])
         out = self.layer3(out)
+#         print(out.shape)         #torch.Size([30, 80, 50, 50])
         out = self.layer4(out)
+#         print(out.shape)         #torch.Size([30, 160, 25, 25])
 #         out = self.c(out)
 #         out = self.se(out)
-        out = avg_pool2d(out, 4)
+        out = avg_pool2d(out, 4) 
+#         print(out.shape)         #torch.Size([30, 160, 6, 6])
         out = out.view(out.size(0), -1)
+#         print(out.shape)         #torch.Size([30, 5760])
         return out
 
     def logits(self, x):
@@ -273,11 +281,12 @@ class SupConResNet(nn.Module):
 
     def forward(self, x):
         feat = self.encoder.features(x)
-        #print(feat.shape)
+#         print(feat.shape)
         if self.head:
             feat = F.normalize(self.head(feat), dim=1)
         else:
             feat = F.normalize(feat, dim=1)
+            
         return feat
 
     def features(self, x):

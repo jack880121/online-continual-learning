@@ -67,17 +67,20 @@ def method_A(params, store=False, save_path=None):
         test_accuracy,test_recall,test_precision = agent.evaluate(test_loader)
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
+            
+        print("train_accuracy_ncm {}----train_recall_ncm {}----train_precision_ncm {}".format(train_accuracy,train_recall,train_precision))
+        print("test_accuracy_ncm {}----test_recall_ncm {}----test_precision_ncm {}".format(test_accuracy,test_recall,test_precision))
         
         #linear classifier
         tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer,ep+5)
         
+        print("train_accuracy_linear {}----train_recall_linear {}----train_precision_linear {}".format(tra,trr,trp))
+        print("test_accuracy_linear {}----test_recall_linear {}----test_precision_linear {}".format(tea,ter,tep))
+        
         writer.add_scalars('accuracy', {'train_accuracy_ncm':train_accuracy,'test_accuracy_ncm':test_accuracy,'train_accuracy_linear':tra,'test_accuracy_linear':tea}, ep)
         writer.add_scalars('recall', {'train_recall_ncm':train_recall,'test_recall_ncm':test_recall,'train_recall_linear':trr,'test_recall_linear':ter}, ep)
         writer.add_scalars('precision', {'train_precision_ncm':train_precision,'test_precision_ncm':test_precision,'train_precision_linear':trp,'test_precision_linear':tep}, ep)
-        print("train_accuracy_ncm {}----train_recall_ncm {}----train_precision_ncm {}".format(train_accuracy,train_recall,train_precision))
-        print("test_accuracy_ncm {}----test_recall_ncm {}----test_precision_ncm {}".format(test_accuracy,test_recall,test_precision))
-        print("train_accuracy_linear {}----train_recall_linear {}----train_precision_linear {}".format(tra,trr,trp))
-        print("test_accuracy_linear {}----test_recall_linear {}----test_precision_linear {}".format(tea,ter,tep))
+        
 
 #         writer.add_scalars('accuracy', {'train_accuracy':train_accuracy,'test_accuracy':test_accuracy}, ep)
 #         writer.add_scalars('recall', {'train_recall':train_recall,'test_recall':test_recall}, ep)
@@ -152,16 +155,18 @@ def method_B(params, store=False, save_path=None):
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
             
+        print("train_accuracy_ncm {}----train_recall_ncm {}----train_precision_ncm {}".format(train_accuracy,train_recall,train_precision))
+        print("test_accuracy_ncm {}----test_recall_ncm {}----test_precision_ncm {}".format(test_accuracy,test_recall,test_precision))   
+              
         #linear classifier    
         tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer,run)
         
+        print("train_accuracy_linear {}----train_recall_linear {}----train_precision_linear {}".format(tra,trr,trp))
+        print("test_accuracy_linear {}----test_recall_linear {}----test_precision_linear {}".format(tea,ter,tep))
+              
         writer.add_scalars('accuracy', {'train_accuracy_ncm':train_accuracy,'test_accuracy_ncm':test_accuracy,'train_accuracy_linear':tra,'test_accuracy_linear':tea}, run)
         writer.add_scalars('recall', {'train_recall_ncm':train_recall,'test_recall_ncm':test_recall,'train_recall_linear':trr,'test_recall_linear':ter}, run)
         writer.add_scalars('precision', {'train_precision_ncm':train_precision,'test_precision_ncm':test_precision,'train_precision_linear':trp,'test_precision_linear':tep}, run)
-        print("train_accuracy_ncm {}----train_recall_ncm {}----train_precision_ncm {}".format(train_accuracy,train_recall,train_precision))
-        print("test_accuracy_ncm {}----test_recall_ncm {}----test_precision_ncm {}".format(test_accuracy,test_recall,test_precision))
-        print("train_accuracy_linear {}----train_recall_linear {}----train_precision_linear {}".format(tra,trr,trp))
-        print("test_accuracy_linear {}----test_recall_linear {}----test_precision_linear {}".format(tea,ter,tep))
         
 #         writer.add_scalars('accuracy', {'train_accuracy':train_accuracy,'test_accuracy':test_accuracy}, run)
 #         writer.add_scalars('recall', {'train_recall':train_recall,'test_recall':test_recall}, run)
