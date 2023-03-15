@@ -199,6 +199,9 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             sk_recall = AverageMeter()
             sk_accuracy = AverageMeter()
             sk_precision = AverageMeter()
+            
+            if torch.cuda.is_available():
+                torch.backends.cudnn.benchmark = True
 
             for i, batch_data in enumerate(test_loader):
                 batch_x, batch_y = batch_data
@@ -232,13 +235,24 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         if torch.cuda.is_available():
             classifier = classifier.cuda()
             ce = ce.cuda()
+            torch.backends.cudnn.benchmark = True
         
         for epoch in range(80):
             loss = self.train(train_loader, classifier, ce, optimizer)
-            if run==9:
+            if run==0:
                 writer.add_scalar('stage2_train_loss', loss, epoch)
-           
+
+        if torch.cuda.is_available():
+            torch.backends.cudnn.benchmark = False
+            
         tra,trr,trp = self.test(train_loader, classifier)
+        
+        if torch.cuda.is_available():
+            torch.backends.cudnn.benchmark = False
+            
         tea,ter,tep = self.test(test_loader, classifier)
         
+        if torch.cuda.is_available():
+            torch.backends.cudnn.benchmark = False
+            
         return tra,trr,trp,tea,ter,tep

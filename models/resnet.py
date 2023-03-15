@@ -318,7 +318,6 @@ class ConvClassifier(nn.Module):
         self.bn2 = nn.BatchNorm2d(40)
         self.conv3 = conv3x3(40, num_classes, stride=2)
         self.bn3 = nn.BatchNorm2d(num_classes)
-
     def forward(self, x):
         x = x.view(x.size(0), 160, 6, 6)
 #         print(x.shape)
