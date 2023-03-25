@@ -158,6 +158,7 @@ def method_B(params, store=False, save_path=None):
         test_accuracy,test_recall,test_precision,t2 = agent.evaluate(test_loader)
         t(t2)
         print(t2/22400*1000,'ms')
+        writer.add_scalar('testtime_ncm_proj', t2/22400*1000, run)
         
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False

@@ -195,7 +195,7 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
 #         print('train loss',loss)
         return loss
 
-    def test(self, test_loader, classifier, n):
+    def test(self, test_loader, classifier, numofdata):
         self.model.eval()
         classifier.eval()
         
@@ -232,8 +232,8 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         
         end = time.time() 
         print(end-start,'s')
-        print((end-start)/n*1000,'ms')
-        return accuracy,recall,precision
+        print((end-start)/numofdata*1000,'ms')
+        return accuracy,recall,precision,(end-start)/numofdata*1000
             
     def classifier(self, train_loader, test_loader, writer, run):      #linear classifier
         ce = torch.nn.CrossEntropyLoss(reduction='mean')
@@ -253,14 +253,16 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
             
-        tra,trr,trp = self.test(train_loader, classifier, 93056)
+        tra,trr,trp,tftrain = self.test(train_loader, classifier, 93056)
 
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
             
-        tea,ter,tep = self.test(test_loader, classifier, 22400)
+        tea,ter,tep,tftest = self.test(test_loader, classifier, 22400)
         
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
+            
+        writer.add_scalar('testtime_conv', tftest, run)
             
         return tra,trr,trp,tea,ter,tep
