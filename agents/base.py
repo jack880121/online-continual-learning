@@ -9,6 +9,7 @@ from utils.loss import SupConLoss
 import pickle
 from sklearn.metrics import recall_score,accuracy_score,precision_score
 from models.resnet import LinearClassifier,ConvClassifier
+import time
 
 class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
     '''
@@ -97,6 +98,8 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             if torch.cuda.is_available():
                 torch.backends.cudnn.benchmark = True
             
+            start = time.time()    
+        
             for i, batch_data in enumerate(test_loader):
                 batch_x, batch_y = batch_data
                 batch_x = maybe_cuda(batch_x, self.cuda)
@@ -140,11 +143,12 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                 sk_precision.update(precision.item(), 1)
                 sk_recall.update(recall.item(), 1)
 #                 losses.update(loss.item(), batch_y.size(0))
+            end = time.time()
             accuracy = sk_accuracy.avg()
             precision = sk_precision.avg()
             recall = sk_recall.avg()
 #             loss = losses.avg()
-        return accuracy,recall,precision #,loss
+        return accuracy,recall,precision,end-start
 
     def train(self, train_loader, classifier, criterion, optimizer):
         self.model.eval()
@@ -191,10 +195,11 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
 #         print('train loss',loss)
         return loss
 
-    def test(self, test_loader, classifier):
+    def test(self, test_loader, classifier, n):
         self.model.eval()
         classifier.eval()
         
+        start = time.time() 
         with torch.no_grad():
             sk_recall = AverageMeter()
             sk_accuracy = AverageMeter()
@@ -224,7 +229,10 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             accuracy = sk_accuracy.avg()
             precision = sk_precision.avg()
             recall = sk_recall.avg()
-            
+        
+        end = time.time() 
+        print(end-start,'s')
+        print((end-start)/n*1000,'ms')
         return accuracy,recall,precision
             
     def classifier(self, train_loader, test_loader, writer, run):      #linear classifier
@@ -239,18 +247,18 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         
         for epoch in range(80):
             loss = self.train(train_loader, classifier, ce, optimizer)
-            if run==0:
+            if run==9:
                 writer.add_scalar('stage2_train_loss', loss, epoch)
 
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
             
-        tra,trr,trp = self.test(train_loader, classifier)
-        
+        tra,trr,trp = self.test(train_loader, classifier, 93056)
+
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
             
-        tea,ter,tep = self.test(test_loader, classifier)
+        tea,ter,tep = self.test(test_loader, classifier, 22400)
         
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False

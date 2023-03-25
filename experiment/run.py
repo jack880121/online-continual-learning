@@ -141,17 +141,24 @@ def method_B(params, store=False, save_path=None):
             
         start = time.time()
         agent.train_learner_B(train_loader,run,writer)
-        end2 = time.time()
+        end = time.time()
         print('traintime')
-        t(int(end2-start))
+        t(int(end-start))
         
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
             
-        train_accuracy,train_recall,train_precision = agent.evaluate(train_loader_for_test)
+        train_accuracy,train_recall,train_precision,t1 = agent.evaluate(train_loader_for_test)
+        t(t1)
+        print(t1/93056*1000,'ms')
+        
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
-        test_accuracy,test_recall,test_precision = agent.evaluate(test_loader)
+           
+        test_accuracy,test_recall,test_precision,t2 = agent.evaluate(test_loader)
+        t(t2)
+        print(t2/22400*1000,'ms')
+        
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
             
@@ -174,10 +181,10 @@ def method_B(params, store=False, save_path=None):
 #         print("train_accuracy {}----train_recall {}----train_precision {}".format(train_accuracy,train_recall,train_precision))
 #         print("test_accuracy {}----test_recall {}----test_precision {}".format(test_accuracy,test_recall,test_precision))
         
-        end = time.time()
-        t(int(end-start))
-        writer.add_scalar('time', end-start, run)
-        totaltime += end-start
+        end2 = time.time()
+        t(int(end2-start))
+        writer.add_scalar('time', end2-start, run)
+        totaltime += end2-start
         
     print('totaltime')
     t(int(totaltime))
