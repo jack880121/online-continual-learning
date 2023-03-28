@@ -48,7 +48,7 @@ def method_A(params, store=False, save_path=None):
     print(test_set.class_to_idx)
     test_loader = data.DataLoader(test_set, batch_size=params.test_batch, shuffle=True, num_workers=2,
                                        drop_last=True)    
-    writer = SummaryWriter('/tf/online-continual-learning/result/resultA_epo80')
+    writer = SummaryWriter('/tf/online-continual-learning/result/resultA_t')
     
     start = time.time()
     
@@ -61,15 +61,25 @@ def method_A(params, store=False, save_path=None):
             
         writer.add_scalar('stage1_train_loss', loss, ep)
         
-        train_accuracy,train_recall,train_precision = agent.evaluate(train_loader_for_test)
+        train_accuracy,train_recall,train_precision,t1 = agent.evaluate(train_loader_for_test)
+        t(t1)
+        print(t1/93056*1000,'ms')
+        
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
-        test_accuracy,test_recall,test_precision = agent.evaluate(test_loader)
+           
+        test_accuracy,test_recall,test_precision,t2 = agent.evaluate(test_loader)
+        t(t2)
+        print(t2/22400*1000,'ms')
+        
+#         writer.add_scalar('testtime_ncm_proj', t2/22400*1000, run)
+        writer.add_scalar('testtime_ncm_original', t2/22400*1000, run)
+        
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
             
         print("train_accuracy_ncm {}----train_recall_ncm {}----train_precision_ncm {}".format(train_accuracy,train_recall,train_precision))
-        print("test_accuracy_ncm {}----test_recall_ncm {}----test_precision_ncm {}".format(test_accuracy,test_recall,test_precision))
+        print("test_accuracy_ncm {}----test_recall_ncm {}----test_precision_ncm {}".format(test_accuracy,test_recall,test_precision)) 
         
         #linear classifier
         tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer,ep+5)
@@ -158,7 +168,9 @@ def method_B(params, store=False, save_path=None):
         test_accuracy,test_recall,test_precision,t2 = agent.evaluate(test_loader)
         t(t2)
         print(t2/22400*1000,'ms')
-        writer.add_scalar('testtime_ncm_proj', t2/22400*1000, run)
+        
+#         writer.add_scalar('testtime_ncm_proj', t2/22400*1000, run)
+        writer.add_scalar('testtime_ncm_original', t2/22400*1000, run)
         
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False

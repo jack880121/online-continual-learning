@@ -58,7 +58,7 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
     def evaluate(self, test_loader):
         self.model.eval()
         
-        checkpoint = torch.load('/tf/online-continual-learning/result/model_state_dict_B_t.pt')
+        checkpoint = torch.load('/tf/online-continual-learning/result/model_state_dict_A_t.pt')
         self.old_labels = [0,1]
         self.buffer.current_index = checkpoint['buffer.current_index']
         self.buffer.buffer_img = checkpoint['buffer.buffer_img']
@@ -75,12 +75,14 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                 features = []
                 # Extract feature for each exemplar in p_y
                 for ex in exemplar:
-                    feature = self.model.forward(ex.unsqueeze(0)).detach().clone()
+                    feature = self.model.features(ex.unsqueeze(0)).detach().clone()
+#                     feature = self.model.forward(ex.unsqueeze(0)).detach().clone()
                     feature = feature.squeeze()
                     feature.data = feature.data / feature.data.norm()  # Normalize
                     features.append(feature)
                 if len(features) == 0:
-                    mu_y = maybe_cuda(torch.normal(0, 1, size=tuple(self.model.forward(x.unsqueeze(0)).detach().size())), self.cuda)
+                    mu_y = maybe_cuda(torch.normal(0, 1, size=tuple(self.model.features(x.unsqueeze(0)).detach().size())), self.cuda)
+#                     mu_y = maybe_cuda(torch.normal(0, 1, size=tuple(self.model.forward(x.unsqueeze(0)).detach().size())), self.cuda)
                     mu_y = mu_y.squeeze()
                 else:
                     features = torch.stack(features)
@@ -105,7 +107,8 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                 batch_x = maybe_cuda(batch_x, self.cuda)
                 batch_y = maybe_cuda(batch_y, self.cuda)
                 if self.params.trick['ncm_trick'] or self.params.agent in ['ICARL', 'SCR', 'SCP']:
-                    feature = self.model.forward(batch_x)  # (batch_size, feature_size)
+                    feature = self.model.features(batch_x)  # (batch_size, feature_size)
+#                     feature = self.model.forward(batch_x)  # (batch_size, feature_size)
                     for j in range(feature.size(0)):  # Normalize
                         feature.data[j] = feature.data[j] / feature.data[j].norm()
                     
@@ -133,7 +136,8 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
 #                     cri = torch.nn.MSELoss()
 #                     loss = torch.sqrt(cri(pred_label.type(torch.cuda.FloatTensor),batch_y.type(torch.cuda.FloatTensor)))
                 else:
-                    logits = self.model.forward(batch_x)
+                    logits = self.model.features(batch_x)
+#                     logits = self.model.forward(batch_x)
                     _, pred_label = torch.max(logits, 1)
                     recall = recall_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()]) #(128,) 的0與1
                     accuracy = accuracy_score(batch_y.cpu().numpy(),np.array(self.old_labels)[pred_label.tolist()])
@@ -237,15 +241,15 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             
     def classifier(self, train_loader, test_loader, writer, run):      #linear classifier
         ce = torch.nn.CrossEntropyLoss(reduction='mean')
-#         classifier = LinearClassifier()
-        classifier = ConvClassifier()
-        optimizer = torch.optim.SGD(classifier.parameters(),lr=0.1,momentum=0.9)
+        classifier = LinearClassifier()  #lr=0.05
+#         classifier = ConvClassifier()  #lr=0.1
+        optimizer = torch.optim.SGD(classifier.parameters(),lr=0.05,momentum=0.9) 
         if torch.cuda.is_available():
             classifier = classifier.cuda()
             ce = ce.cuda()
             torch.backends.cudnn.benchmark = True
         
-        for epoch in range(80):
+        for epoch in range(2):
             loss = self.train(train_loader, classifier, ce, optimizer)
             if run==9:
                 writer.add_scalar('stage2_train_loss', loss, epoch)
@@ -263,6 +267,8 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
             
-        writer.add_scalar('testtime_conv', tftest, run)
+#         writer.add_scalar('testtime_conv', tftest, run)
+#         writer.add_scalar('testtime_connect', tftest, run)
+        writer.add_scalar('testtime_connect_1layer', tftest, run)
             
         return tra,trr,trp,tea,ter,tep
