@@ -72,8 +72,8 @@ def method_A(params, store=False, save_path=None):
         t(t2)
         print(t2/22400*1000,'ms')
         
-#         writer.add_scalar('testtime_ncm_proj', t2/22400*1000, run)
-        writer.add_scalar('testtime_ncm_original', t2/22400*1000, run)
+#         writer.add_scalar('testtime_ncm_proj', t2/22400*1000, ep)
+        writer.add_scalar('testtime_ncm_original', t2/22400*1000, ep)
         
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
@@ -169,8 +169,8 @@ def method_B(params, store=False, save_path=None):
         t(t2)
         print(t2/22400*1000,'ms')
         
-#         writer.add_scalar('testtime_ncm_proj', t2/22400*1000, run)
-        writer.add_scalar('testtime_ncm_original', t2/22400*1000, run)
+        writer.add_scalar('testtime_ncm_proj', t2/22400*1000, run)
+#         writer.add_scalar('testtime_ncm_original', t2/22400*1000, run)
         
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False

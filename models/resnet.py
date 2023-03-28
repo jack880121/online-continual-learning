@@ -296,14 +296,14 @@ class LinearClassifier(nn.Module):
     """Linear classifier"""
     def __init__(self, feat_dim=5760, num_classes=2):
         super(LinearClassifier, self).__init__()
-        self.fc = nn.Linear(feat_dim, num_classes)
-#         self.fc = nn.Sequential(
-#                 nn.Linear(feat_dim, 1024),
-#                 nn.ReLU(inplace=True),
-#                 nn.Linear(1024, 128),
-#                 nn.ReLU(inplace=True),
-#                 nn.Linear(128, num_classes)
-#             )
+#         self.fc = nn.Linear(feat_dim, num_classes)
+        self.fc = nn.Sequential(
+                nn.Linear(feat_dim, 1024),
+                nn.ReLU(inplace=True),
+                nn.Linear(1024, 128),
+                nn.ReLU(inplace=True),
+                nn.Linear(128, num_classes)
+            )
 
     def forward(self, features):
         return self.fc(features)
@@ -312,12 +312,22 @@ class ConvClassifier(nn.Module):
     """conv classifier"""
     def __init__(self, num_classes=2):
         super(ConvClassifier, self).__init__()
-        self.conv1 = conv3x3(160, 80, stride=2)
+#         self.conv1 = conv3x3(160, 80, stride=2)
+#         self.bn1 = nn.BatchNorm2d(80)
+#         self.conv2 = conv3x3(80, 40, stride=2)
+#         self.bn2 = nn.BatchNorm2d(40)
+#         self.conv3 = conv3x3(40, num_classes, stride=2)
+#         self.bn3 = nn.BatchNorm2d(num_classes)
+        self.conv1 = nn.Conv2d(160, 80, kernel_size=1, stride=1,
+                     padding=0, bias=False)
         self.bn1 = nn.BatchNorm2d(80)
-        self.conv2 = conv3x3(80, 40, stride=2)
+        self.conv2 = nn.Conv2d(80, 40, kernel_size=1, stride=1,
+                     padding=0, bias=False)
         self.bn2 = nn.BatchNorm2d(40)
-        self.conv3 = conv3x3(40, num_classes, stride=2)
+        self.conv3 = nn.Conv2d(40, num_classes, kernel_size=1, stride=1,
+                     padding=0, bias=False)
         self.bn3 = nn.BatchNorm2d(num_classes)
+        
     def forward(self, x):
         x = x.view(x.size(0), 160, 6, 6)
 #         print(x.shape)
@@ -326,6 +336,8 @@ class ConvClassifier(nn.Module):
         x = relu(self.bn2(self.conv2(x)))
 #         print(x.shape)
         x = relu(self.bn3(self.conv3(x)))
+#         print(x.shape)
+        x = max_pool2d(x, 6) 
 #         print(x.shape)
         x = x.view(x.size(0), -1)
 #         print(x.shape)
