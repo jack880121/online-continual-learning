@@ -249,7 +249,7 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             ce = ce.cuda()
             torch.backends.cudnn.benchmark = True
         
-        for epoch in range(80):
+        for epoch in range(100):
             loss = self.train(train_loader, classifier, ce, optimizer)
             if run==9:
                 writer.add_scalar('stage2_train_loss', loss, epoch)

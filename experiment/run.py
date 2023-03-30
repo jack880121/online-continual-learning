@@ -181,12 +181,12 @@ def method_B(params, store=False, save_path=None):
         #linear classifier    
         tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer,run)
         
-        print("train_accuracy_linear {}----train_recall_linear {}----train_precision_linear {}".format(tra,trr,trp))
-        print("test_accuracy_linear {}----test_recall_linear {}----test_precision_linear {}".format(tea,ter,tep))
+        print("train_accuracy_conv {}----train_recall_conv {}----train_precision_conv {}".format(tra,trr,trp))
+        print("test_accuracy_conv {}----test_recall_conv {}----test_precision_conv {}".format(tea,ter,tep))
               
-        writer.add_scalars('accuracy', {'train_accuracy_ncm':train_accuracy,'test_accuracy_ncm':test_accuracy,'train_accuracy_linear':tra,'test_accuracy_linear':tea}, run)
-        writer.add_scalars('recall', {'train_recall_ncm':train_recall,'test_recall_ncm':test_recall,'train_recall_linear':trr,'test_recall_linear':ter}, run)
-        writer.add_scalars('precision', {'train_precision_ncm':train_precision,'test_precision_ncm':test_precision,'train_precision_linear':trp,'test_precision_linear':tep}, run)
+        writer.add_scalars('accuracy', {'train_accuracy_ncm':train_accuracy,'test_accuracy_ncm':test_accuracy,'train_accuracy_conv':tra,'test_accuracy_conv':tea}, run)
+        writer.add_scalars('recall', {'train_recall_ncm':train_recall,'test_recall_ncm':test_recall,'train_recall_conv':trr,'test_recall_conv':ter}, run)
+        writer.add_scalars('precision', {'train_precision_ncm':train_precision,'test_precision_ncm':test_precision,'train_precision_conv':trp,'test_precision_conv':tep}, run)
         
 #         writer.add_scalars('accuracy', {'train_accuracy':train_accuracy,'test_accuracy':test_accuracy}, run)
 #         writer.add_scalars('recall', {'train_recall':train_recall,'test_recall':test_recall}, run)
