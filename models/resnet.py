@@ -335,6 +335,7 @@ class ConvClassifier(nn.Module):
         self.bn2 = nn.BatchNorm2d(40)
         self.conv3 = conv3x3(40, num_classes)
         self.bn3 = nn.BatchNorm2d(num_classes)
+        self.fc = nn.Linear(72, 2)
         
     def forward(self, x):
         x = x.view(x.size(0), 160, 6, 6)
@@ -345,8 +346,10 @@ class ConvClassifier(nn.Module):
 #         print(x.shape)
         x = relu(self.bn3(self.conv3(x)))
 #         print(x.shape)
-        x = avg_pool2d(x, 6) 
+#         x = avg_pool2d(x, 6) 
+#         print(x.shape)
+#         x = x.view(x.size(0), -1)
 #         print(x.shape)
         x = x.view(x.size(0), -1)
-#         print(x.shape)
+        x = self.fc(x) 
         return x
