@@ -296,14 +296,14 @@ class LinearClassifier(nn.Module):
     """Linear classifier"""
     def __init__(self, feat_dim=5760, num_classes=2):
         super(LinearClassifier, self).__init__()
-        self.fc = nn.Linear(feat_dim, num_classes)
-#         self.fc = nn.Sequential(
-#                 nn.Linear(feat_dim, 1024),
-#                 nn.ReLU(inplace=True),
-#                 nn.Linear(1024, 128),
-#                 nn.ReLU(inplace=True),
-#                 nn.Linear(128, num_classes)
-#             )
+#         self.fc = nn.Linear(feat_dim, num_classes)
+        self.fc = nn.Sequential(
+                nn.Linear(feat_dim, 1024),
+                nn.ReLU(inplace=True),
+                nn.Linear(1024, 128),
+                nn.ReLU(inplace=True),
+                nn.Linear(128, num_classes)
+            )
 
     def forward(self, features):
         return self.fc(features)
@@ -335,7 +335,7 @@ class ConvClassifier(nn.Module):
         self.bn2 = nn.BatchNorm2d(40)
         self.conv3 = conv3x3(40, num_classes)
         self.bn3 = nn.BatchNorm2d(num_classes)
-        self.fc = nn.Linear(72, 2)
+#         self.fc = nn.Linear(72, 2)
         
     def forward(self, x):
         x = x.view(x.size(0), 160, 6, 6)
@@ -346,10 +346,10 @@ class ConvClassifier(nn.Module):
 #         print(x.shape)
         x = relu(self.bn3(self.conv3(x)))
 #         print(x.shape)
-#         x = avg_pool2d(x, 6) 
-#         print(x.shape)
-#         x = x.view(x.size(0), -1)
+        x = avg_pool2d(x, 6) 
 #         print(x.shape)
         x = x.view(x.size(0), -1)
-        x = self.fc(x) 
+#         print(x.shape)
+#         x = x.view(x.size(0), -1)
+#         x = self.fc(x) 
         return x
