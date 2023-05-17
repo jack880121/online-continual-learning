@@ -268,7 +268,6 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
             torch.backends.cudnn.benchmark = False
             
         writer.add_scalar('testtime_conv', tftest, run)
-#         writer.add_scalar('testtime_connect', tftest, run)
-#         writer.add_scalar('testtime_connect_1layer', tftest, run)
+#         writer.add_scalar('testtime_fc', tftest, run)
             
         return tra,trr,trp,tea,ter,tep

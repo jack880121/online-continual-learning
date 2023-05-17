@@ -21,7 +21,8 @@ class SupContrastReplay(ContinualLearner):
             RandomResizedCrop(size=(input_size_match[self.params.data][1], input_size_match[self.params.data][2]), scale=(0.7, 1.)),
             RandomVerticalFlip(),
             RandomHorizontalFlip()#,
-            #ColorJitter(brightness=0.2)
+#             ColorJitter(0.4, 0.4, 0.4, 0.1, p=0.8),
+#             RandomGrayscale(p=0.2)
         )
         
     def train_learner_A(self, train_loader):

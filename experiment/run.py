@@ -178,7 +178,7 @@ def method_B(params, store=False, save_path=None):
         print("train_accuracy_ncm {}----train_recall_ncm {}----train_precision_ncm {}".format(train_accuracy,train_recall,train_precision))
         print("test_accuracy_ncm {}----test_recall_ncm {}----test_precision_ncm {}".format(test_accuracy,test_recall,test_precision))   
               
-        #linear classifier    
+        #other classifier    
         tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer,run)
         
         print("train_accuracy_conv {}----train_recall_conv {}----train_precision_conv {}".format(tra,trr,trp))
@@ -188,11 +188,9 @@ def method_B(params, store=False, save_path=None):
         writer.add_scalars('recall', {'train_recall_ncm':train_recall,'test_recall_ncm':test_recall,'train_recall_conv':trr,'test_recall_conv':ter}, run)
         writer.add_scalars('precision', {'train_precision_ncm':train_precision,'test_precision_ncm':test_precision,'train_precision_conv':trp,'test_precision_conv':tep}, run)
         
-#         writer.add_scalars('accuracy', {'train_accuracy':train_accuracy,'test_accuracy':test_accuracy}, run)
-#         writer.add_scalars('recall', {'train_recall':train_recall,'test_recall':test_recall}, run)
-#         writer.add_scalars('precision', {'train_precision':train_precision,'test_precision':test_precision}, run)
-#         print("train_accuracy {}----train_recall {}----train_precision {}".format(train_accuracy,train_recall,train_precision))
-#         print("test_accuracy {}----test_recall {}----test_precision {}".format(test_accuracy,test_recall,test_precision))
+#         writer.add_scalars('accuracy', {'train_accuracy_ncm':train_accuracy,'test_accuracy_ncm':test_accuracy}, run)
+#         writer.add_scalars('recall', {'train_recall_ncm':train_recall,'test_recall_ncm':test_recall}, run)
+#         writer.add_scalars('precision', {'train_precision_ncm':train_precision,'test_precision_ncm':test_precision}, run)
         
         end2 = time.time()
         t(int(end2-start))

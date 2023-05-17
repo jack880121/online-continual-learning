@@ -13,7 +13,7 @@ def conv3x3(in_planes, out_planes, stride=1):
                      padding=1, bias=False)
 
 class SELayer(nn.Module):                #se
-    def __init__(self, channel, reduction=16):
+    def __init__(self, channel, reduction=5):
         super(SELayer, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
@@ -122,7 +122,7 @@ class BasicBlock(nn.Module):
         self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = conv3x3(planes, planes)
         self.bn2 = nn.BatchNorm2d(planes)
-        #self.se = SELayer(planes, 10) #se
+#         self.se = SELayer(planes) #se
         #self.c = CBAM(planes)         #cbam
 
         self.shortcut = nn.Sequential()
@@ -136,7 +136,7 @@ class BasicBlock(nn.Module):
     def forward(self, x):
         out = relu(self.bn1(self.conv1(x)))
         out = self.bn2(self.conv2(out))
-        #out = self.se(out) #se
+#         out = self.se(out) #se
         #out = self.c(out) #cbam
         out += self.shortcut(x)
         out = relu(out)
@@ -349,25 +349,25 @@ class ConvClassifier(nn.Module):
 #         self.bn5 = nn.BatchNorm2d(num_classes)
 #         self.fc = nn.Linear(72, 2)
 
-#         self.conv1 = conv3x3(160, 120)          #3x3 5layer+ap+fc
-#         self.bn1 = nn.BatchNorm2d(120)
-#         self.conv2 = conv3x3(120, 80)
-#         self.bn2 = nn.BatchNorm2d(80)
-#         self.conv3 = conv3x3(80, 40)
-#         self.bn3 = nn.BatchNorm2d(40)
-#         self.conv4 = conv3x3(40, 20)
-#         self.bn4 = nn.BatchNorm2d(20)
-#         self.conv5 = conv3x3(20, num_classes)
-#         self.bn5 = nn.BatchNorm2d(num_classes)
-#         self.fc = nn.Linear(18, 2)
-
-        self.conv1 = conv3x3(160, 80)                           ##3x3 3layer+ap+fc
-        self.bn1 = nn.BatchNorm2d(80)
-        self.conv2 = conv3x3(80, 40)
-        self.bn2 = nn.BatchNorm2d(40)
-        self.conv3 = conv3x3(40, num_classes)
-        self.bn3 = nn.BatchNorm2d(num_classes)
+        self.conv1 = conv3x3(160, 120)          #3x3 5layer+ap+fc
+        self.bn1 = nn.BatchNorm2d(120)
+        self.conv2 = conv3x3(120, 80)
+        self.bn2 = nn.BatchNorm2d(80)
+        self.conv3 = conv3x3(80, 40)
+        self.bn3 = nn.BatchNorm2d(40)
+        self.conv4 = conv3x3(40, 20)
+        self.bn4 = nn.BatchNorm2d(20)
+        self.conv5 = conv3x3(20, num_classes)
+        self.bn5 = nn.BatchNorm2d(num_classes)
         self.fc = nn.Linear(18, 2)
+
+#         self.conv1 = conv3x3(160, 80)                           ##3x3 3layer+ap+fc
+#         self.bn1 = nn.BatchNorm2d(80)
+#         self.conv2 = conv3x3(80, 40)
+#         self.bn2 = nn.BatchNorm2d(40)
+#         self.conv3 = conv3x3(40, num_classes)
+#         self.bn3 = nn.BatchNorm2d(num_classes)
+#         self.fc = nn.Linear(18, 2)
 
     def forward(self, x):
         x = x.view(x.size(0), 160, 6, 6)
@@ -377,8 +377,8 @@ class ConvClassifier(nn.Module):
         x = relu(self.bn2(self.conv2(x)))
 #         print(x.shape)
         x = relu(self.bn3(self.conv3(x)))
-#         x = relu(self.bn4(self.conv4(x)))
-#         x = relu(self.bn5(self.conv5(x)))
+        x = relu(self.bn4(self.conv4(x)))
+        x = relu(self.bn5(self.conv5(x)))
 #         print(x.shape)
         x = avg_pool2d(x, 2) 
 #         print(x.shape)
