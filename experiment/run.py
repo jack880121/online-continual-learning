@@ -194,7 +194,7 @@ def method_B(params, store=False, save_path=None):
 #         writer.add_scalars('precision', {'train_precision_ncm':train_precision,'test_precision_ncm':test_precision}, run)
 
         #new classifier    
-        tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer)
+        tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer, run)
         
         print("train_accuracy_conv {}----train_recall_conv {}----train_precision_conv {}".format(tra,trr,trp))
         print("test_accuracy_conv {}----test_recall_conv {}----test_precision_conv {}".format(tea,ter,tep))

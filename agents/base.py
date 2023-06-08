@@ -310,19 +310,19 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         print((end-start)/numofdata*1000,'ms')
         return accuracy,recall,precision,(end-start)/numofdata*1000
             
-    def classifier(self, train_loader, test_loader, writer):       #把映射層改成卷積分類器
+    def classifier(self, train_loader, test_loader, writer, run):       #把映射層改成卷積分類器
         tra,trr,trp,tftrain = self.test(train_loader, 93056)
 
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
             
-        tea,ter,tep,tftest = self.test(test_loader, classifier, 22400)
+        tea,ter,tep,tftest = self.test(test_loader, 22400)
         
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
             
             
-        writer.add_scalar('testtime_train', tftrain)    
-        writer.add_scalar('testtime_test', tftest)
+        writer.add_scalar('testtime_train', tftrain, run)    
+        writer.add_scalar('testtime_test', tftest, run)
             
         return tra,trr,trp,tea,ter,tep
