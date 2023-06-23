@@ -258,39 +258,39 @@ def ResNet152(nclasses, nf=64, bias=True):
     return ResNet(Bottleneck, [3, 8, 36, 3], nclasses, nf, bias)
 
 
-# class SupConResNet(nn.Module):
-#     """backbone + projection head"""
-#     def __init__(self, dim_in=5760, head='mlp', feat_dim=128): #5760  #128
-#         super(SupConResNet, self).__init__()
-#         #self.encoder = Reduced_ResNet18(100)
-#         self.encoder = Reduced_ResNet18(2)
-#         #self.encoder = ResNet18(2)
-#         if head == 'linear':
-#             self.head = nn.Linear(dim_in, feat_dim)
-#         elif head == 'mlp':
-#             self.head = nn.Sequential(
-#                 nn.Linear(dim_in, dim_in),
-#                 nn.ReLU(inplace=True),
-#                 nn.Linear(dim_in, feat_dim)
-#             )
-#         elif head == 'None':
-#             self.head = None
-#         else:
-#             raise NotImplementedError(
-#                 'head not supported: {}'.format(head))
+class SupConResNet(nn.Module):
+    """backbone + projection head"""
+    def __init__(self, dim_in=5760, head='mlp', feat_dim=128): #5760  #128
+        super(SupConResNet, self).__init__()
+        #self.encoder = Reduced_ResNet18(100)
+        self.encoder = Reduced_ResNet18(2)
+        #self.encoder = ResNet18(2)
+        if head == 'linear':
+            self.head = nn.Linear(dim_in, feat_dim)
+        elif head == 'mlp':
+            self.head = nn.Sequential(
+                nn.Linear(dim_in, dim_in),
+                nn.ReLU(inplace=True),
+                nn.Linear(dim_in, feat_dim)
+            )
+        elif head == 'None':
+            self.head = None
+        else:
+            raise NotImplementedError(
+                'head not supported: {}'.format(head))
 
-#     def forward(self, x):
-#         feat = self.encoder.features(x)
-# #         print(feat.shape)
-#         if self.head:
-#             feat = F.normalize(self.head(feat), dim=1)
-#         else:
-#             feat = F.normalize(feat, dim=1)
+    def forward(self, x):
+        feat = self.encoder.features(x)
+#         print(feat.shape)
+        if self.head:
+            feat = F.normalize(self.head(feat), dim=1)
+        else:
+            feat = F.normalize(feat, dim=1)
             
-#         return feat
+        return feat
 
-#     def features(self, x):
-#         return self.encoder.features(x)
+    def features(self, x):
+        return self.encoder.features(x)
 
 class LinearClassifier(nn.Module):
     """Linear classifier"""
@@ -388,39 +388,39 @@ class ConvClassifier(nn.Module):
         x = self.fc(x) 
         return x
     
-class SupConResNet(nn.Module):        #把映射層改成全連接分類器    lr->0.00001
-    """backbone + projection head"""
-    def __init__(self, dim_in=5760, head='mlp', feat_dim=2): #5760  #128
-        super(SupConResNet, self).__init__()
-        self.encoder = Reduced_ResNet18(2)
-        if head == 'linear':
-            self.head = nn.Linear(dim_in, feat_dim)
-        elif head == 'mlp':
-            self.head = nn.Sequential(
-                nn.Linear(dim_in, 1024),
-                nn.ReLU(inplace=True),
-                nn.Linear(1024, 128),
-                nn.ReLU(inplace=True),
-                nn.Linear(128, feat_dim)
-            )
-        elif head == 'None':
-            self.head = None
-        else:
-            raise NotImplementedError(
-                'head not supported: {}'.format(head))
+# class SupConResNet(nn.Module):        #把映射層改成全連接分類器    lr->0.00001
+#     """backbone + projection head"""
+#     def __init__(self, dim_in=5760, head='mlp', feat_dim=2): #5760  #128
+#         super(SupConResNet, self).__init__()
+#         self.encoder = Reduced_ResNet18(2)
+#         if head == 'linear':
+#             self.head = nn.Linear(dim_in, feat_dim)
+#         elif head == 'mlp':
+#             self.head = nn.Sequential(
+#                 nn.Linear(dim_in, 1024),
+#                 nn.ReLU(inplace=True),
+#                 nn.Linear(1024, 128),
+#                 nn.ReLU(inplace=True),
+#                 nn.Linear(128, feat_dim)
+#             )
+#         elif head == 'None':
+#             self.head = None
+#         else:
+#             raise NotImplementedError(
+#                 'head not supported: {}'.format(head))
 
-    def forward(self, x):
-        feat = self.encoder.features(x)
-#         print(feat.shape)
-        if self.head:
-            feat = F.normalize(self.head(feat), dim=1)
-        else:
-            feat = F.normalize(feat, dim=1)
+#     def forward(self, x):
+#         feat = self.encoder.features(x)
+# #         print(feat.shape)
+#         if self.head:
+#             feat = F.normalize(self.head(feat), dim=1)
+#         else:
+#             feat = F.normalize(feat, dim=1)
             
-        return feat
+#         return feat
 
-    def features(self, x):
-        return self.encoder.features(x)
+#     def features(self, x):
+#         return self.encoder.features(x)
 
 # class SupConResNet(nn.Module):        #把映射層改成卷積分類器   lr->0.00001
 #     """backbone + projection head"""

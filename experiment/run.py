@@ -158,50 +158,47 @@ def method_B(params, store=False, save_path=None):
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
             
-#         train_accuracy,train_recall,train_precision,t1 = agent.evaluate(train_loader_for_test)
-#         t(t1)
-#         print(t1/93056*1000,'ms')
+        train_accuracy,train_recall,train_precision,t1 = agent.evaluate(train_loader_for_test)
+        t(t1)
+        print(t1/93056*1000,'ms')
         
-#         if torch.cuda.is_available():
-#             torch.backends.cudnn.benchmark = False
+        if torch.cuda.is_available():
+            torch.backends.cudnn.benchmark = False
            
-#         test_accuracy,test_recall,test_precision,t2 = agent.evaluate(test_loader)
-#         t(t2)
-#         print(t2/22400*1000,'ms')
+        test_accuracy,test_recall,test_precision,t2 = agent.evaluate(test_loader)
+        t(t2)
+        print(t2/22400*1000,'ms')
         
-#         writer.add_scalar('testtime_ncm_proj', t2/22400*1000, run)
+        writer.add_scalar('testtime_ncm_proj', t2/22400*1000, run)
 #         writer.add_scalar('testtime_ncm_original', t2/22400*1000, run)
 
         
-#         if torch.cuda.is_available():
-#             torch.backends.cudnn.benchmark = False
+        if torch.cuda.is_available():
+            torch.backends.cudnn.benchmark = False
             
-#         print("train_accuracy_ncm {}----train_recall_ncm {}----train_precision_ncm {}".format(train_accuracy,train_recall,train_precision))
-#         print("test_accuracy_ncm {}----test_recall_ncm {}----test_precision_ncm {}".format(test_accuracy,test_recall,test_precision))   
+        print("train_accuracy_ncm {}----train_recall_ncm {}----train_precision_ncm {}".format(train_accuracy,train_recall,train_precision))
+        print("test_accuracy_ncm {}----test_recall_ncm {}----test_precision_ncm {}".format(test_accuracy,test_recall,test_precision))   
               
-#         #other classifier    
-#         tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer,run)
-        
-#         print("train_accuracy_conv {}----train_recall_conv {}----train_precision_conv {}".format(tra,trr,trp))
-#         print("test_accuracy_conv {}----test_recall_conv {}----test_precision_conv {}".format(tea,ter,tep))
-              
-#         writer.add_scalars('accuracy', {'train_accuracy_ncm':train_accuracy,'test_accuracy_ncm':test_accuracy,'train_accuracy_conv':tra,'test_accuracy_conv':tea}, run)
-#         writer.add_scalars('recall', {'train_recall_ncm':train_recall,'test_recall_ncm':test_recall,'train_recall_conv':trr,'test_recall_conv':ter}, run)
-#         writer.add_scalars('precision', {'train_precision_ncm':train_precision,'test_precision_ncm':test_precision,'train_precision_conv':trp,'test_precision_conv':tep}, run)
-        
-#         writer.add_scalars('accuracy', {'train_accuracy_ncm':train_accuracy,'test_accuracy_ncm':test_accuracy}, run)
-#         writer.add_scalars('recall', {'train_recall_ncm':train_recall,'test_recall_ncm':test_recall}, run)
-#         writer.add_scalars('precision', {'train_precision_ncm':train_precision,'test_precision_ncm':test_precision}, run)
-
-        #new classifier    
-        tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer, run)
+        #other classifier    
+        tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer,run)
         
         print("train_accuracy_conv {}----train_recall_conv {}----train_precision_conv {}".format(tra,trr,trp))
         print("test_accuracy_conv {}----test_recall_conv {}----test_precision_conv {}".format(tea,ter,tep))
               
-        writer.add_scalars('accuracy', {'train_accuracy_conv':tra,'test_accuracy_conv':tea}, run)
-        writer.add_scalars('recall', {'train_recall_conv':trr,'test_recall_conv':ter}, run)
-        writer.add_scalars('precision', {'train_precision_conv':trp,'test_precision_conv':tep}, run)
+        writer.add_scalars('accuracy', {'train_accuracy_ncm':train_accuracy,'test_accuracy_ncm':test_accuracy,'train_accuracy_conv':tra,'test_accuracy_conv':tea}, run)
+        writer.add_scalars('recall', {'train_recall_ncm':train_recall,'test_recall_ncm':test_recall,'train_recall_conv':trr,'test_recall_conv':ter}, run)
+        writer.add_scalars('precision', {'train_precision_ncm':train_precision,'test_precision_ncm':test_precision,'train_precision_conv':trp,'test_precision_conv':tep}, run)
+        
+
+#         #new classifier    
+#         tra,trr,trp,tea,ter,tep = agent.classifier(train_loader_for_test,test_loader,writer, run)
+        
+#         print("train_accuracy_conv {}----train_recall_conv {}----train_precision_conv {}".format(tra,trr,trp))
+#         print("test_accuracy_conv {}----test_recall_conv {}----test_precision_conv {}".format(tea,ter,tep))
+              
+#         writer.add_scalars('accuracy', {'train_accuracy_conv':tra,'test_accuracy_conv':tea}, run)
+#         writer.add_scalars('recall', {'train_recall_conv':trr,'test_recall_conv':ter}, run)
+#         writer.add_scalars('precision', {'train_precision_conv':trp,'test_precision_conv':tep}, run)
         
         end2 = time.time()
         t(int(end2-start))

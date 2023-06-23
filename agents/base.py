@@ -199,81 +199,9 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
 #         print('train loss',loss)
         return loss
 
-#     def test(self, test_loader, classifier, numofdata):
-#         self.model.eval()
-#         classifier.eval()
-        
-#         start = time.time() 
-#         with torch.no_grad():
-#             sk_recall = AverageMeter()
-#             sk_accuracy = AverageMeter()
-#             sk_precision = AverageMeter()
-            
-#             if torch.cuda.is_available():
-#                 torch.backends.cudnn.benchmark = True
-
-#             for i, batch_data in enumerate(test_loader):
-#                 batch_x, batch_y = batch_data
-#                 batch_x = maybe_cuda(batch_x, self.cuda)
-#                 batch_y = maybe_cuda(batch_y, self.cuda)
-
-                
-#                 features = self.model.features(batch_x)
-#                 output = classifier(features)
-
-#                 _, pred_label = torch.max(output.cpu(), 1)
-#                 recall = recall_score(batch_y.cpu().numpy(),pred_label) #(128,) 的0與1
-#                 accuracy = accuracy_score(batch_y.cpu().numpy(),pred_label)
-#                 precision = precision_score(batch_y.cpu().numpy(),pred_label)
-
-#                 sk_accuracy.update(accuracy.item(), 1)  #batch_y.size(0)
-#                 sk_precision.update(precision.item(), 1)
-#                 sk_recall.update(recall.item(), 1)
-
-#             accuracy = sk_accuracy.avg()
-#             precision = sk_precision.avg()
-#             recall = sk_recall.avg()
-        
-#         end = time.time() 
-#         print(end-start,'s')
-#         print((end-start)/numofdata*1000,'ms')
-#         return accuracy,recall,precision,(end-start)/numofdata*1000
-            
-#     def classifier(self, train_loader, test_loader, writer, run):      #linear classifier
-#         ce = torch.nn.CrossEntropyLoss(reduction='mean')
-# #         classifier = LinearClassifier()  #lr=0.05
-#         classifier = ConvClassifier()  #lr=0.1
-#         optimizer = torch.optim.SGD(classifier.parameters(),lr=0.1,momentum=0.9) 
-#         if torch.cuda.is_available():
-#             classifier = classifier.cuda()
-#             ce = ce.cuda()
-#             torch.backends.cudnn.benchmark = True
-        
-#         for epoch in range(100):
-#             loss = self.train(train_loader, classifier, ce, optimizer)
-#             if run==9:
-#                 writer.add_scalar('stage2_train_loss', loss, epoch)
-
-#         if torch.cuda.is_available():
-#             torch.backends.cudnn.benchmark = False
-            
-#         tra,trr,trp,tftrain = self.test(train_loader, classifier, 93056)
-
-#         if torch.cuda.is_available():
-#             torch.backends.cudnn.benchmark = False
-            
-#         tea,ter,tep,tftest = self.test(test_loader, classifier, 22400)
-        
-#         if torch.cuda.is_available():
-#             torch.backends.cudnn.benchmark = False
-            
-#         writer.add_scalar('testtime_conv', tftest, run)
-# #         writer.add_scalar('testtime_fc', tftest, run)
-            
-#         return tra,trr,trp,tea,ter,tep
-    
-    def test(self, test_loader, numofdata):
+    def test(self, test_loader, classifier, numofdata):
         self.model.eval()
+        classifier.eval()
         
         start = time.time() 
         with torch.no_grad():
@@ -290,7 +218,8 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                 batch_y = maybe_cuda(batch_y, self.cuda)
 
                 
-                output = self.model.forward(batch_x)
+                features = self.model.features(batch_x)
+                output = classifier(features)
 
                 _, pred_label = torch.max(output.cpu(), 1)
                 recall = recall_score(batch_y.cpu().numpy(),pred_label) #(128,) 的0與1
@@ -310,19 +239,90 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
         print((end-start)/numofdata*1000,'ms')
         return accuracy,recall,precision,(end-start)/numofdata*1000
             
-    def classifier(self, train_loader, test_loader, writer, run):       #把映射層改成卷積分類器
-        tra,trr,trp,tftrain = self.test(train_loader, 93056)
+    def classifier(self, train_loader, test_loader, writer, run):      #linear classifier
+        ce = torch.nn.CrossEntropyLoss(reduction='mean')
+#         classifier = LinearClassifier()  #lr=0.05
+        classifier = ConvClassifier()  #lr=0.1
+        optimizer = torch.optim.SGD(classifier.parameters(),lr=0.1,momentum=0.9) 
+        if torch.cuda.is_available():
+            classifier = classifier.cuda()
+            ce = ce.cuda()
+            torch.backends.cudnn.benchmark = True
+        
+        for epoch in range(100):
+            loss = self.train(train_loader, classifier, ce, optimizer)
+            if run==9:
+                writer.add_scalar('stage2_train_loss', loss, epoch)
 
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
             
-        tea,ter,tep,tftest = self.test(test_loader, 22400)
+        tra,trr,trp,tftrain = self.test(train_loader, classifier, 93056)
+
+        if torch.cuda.is_available():
+            torch.backends.cudnn.benchmark = False
+            
+        tea,ter,tep,tftest = self.test(test_loader, classifier, 22400)
         
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = False
             
-            
-        writer.add_scalar('testtime_train', tftrain, run)    
-        writer.add_scalar('testtime_test', tftest, run)
+        writer.add_scalar('testtime_conv', tftest, run)
+#         writer.add_scalar('testtime_fc', tftest, run)
             
         return tra,trr,trp,tea,ter,tep
+    
+#     def test(self, test_loader, numofdata):
+#         self.model.eval()
+        
+#         start = time.time() 
+#         with torch.no_grad():
+#             sk_recall = AverageMeter()
+#             sk_accuracy = AverageMeter()
+#             sk_precision = AverageMeter()
+            
+#             if torch.cuda.is_available():
+#                 torch.backends.cudnn.benchmark = True
+
+#             for i, batch_data in enumerate(test_loader):
+#                 batch_x, batch_y = batch_data
+#                 batch_x = maybe_cuda(batch_x, self.cuda)
+#                 batch_y = maybe_cuda(batch_y, self.cuda)
+
+                
+#                 output = self.model.forward(batch_x)
+
+#                 _, pred_label = torch.max(output.cpu(), 1)
+#                 recall = recall_score(batch_y.cpu().numpy(),pred_label) #(128,) 的0與1
+#                 accuracy = accuracy_score(batch_y.cpu().numpy(),pred_label)
+#                 precision = precision_score(batch_y.cpu().numpy(),pred_label)
+
+#                 sk_accuracy.update(accuracy.item(), 1)  #batch_y.size(0)
+#                 sk_precision.update(precision.item(), 1)
+#                 sk_recall.update(recall.item(), 1)
+
+#             accuracy = sk_accuracy.avg()
+#             precision = sk_precision.avg()
+#             recall = sk_recall.avg()
+        
+#         end = time.time() 
+#         print(end-start,'s')
+#         print((end-start)/numofdata*1000,'ms')
+#         return accuracy,recall,precision,(end-start)/numofdata*1000
+            
+#     def classifier(self, train_loader, test_loader, writer, run):       #把映射層改成卷積分類器
+#         tra,trr,trp,tftrain = self.test(train_loader, 93056)
+
+#         if torch.cuda.is_available():
+#             torch.backends.cudnn.benchmark = False
+            
+#         tea,ter,tep,tftest = self.test(test_loader, 22400)
+        
+#         if torch.cuda.is_available():
+#             torch.backends.cudnn.benchmark = False
+            
+            
+#         writer.add_scalar('testtime_train', tftrain, run)    
+#         writer.add_scalar('testtime_test', tftest, run)
+            
+#         return tra,trr,trp,tea,ter,tep
